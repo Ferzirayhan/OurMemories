@@ -61,10 +61,10 @@ export function MoodSupport() {
                 className="relative z-10"
             >
                 <p className="text-sm font-medium text-zinc-500 uppercase tracking-widest">{today}</p>
-                <h2 className="text-3xl font-light mt-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-500">
+                <h2 className="text-3xl font-light mt-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-500 font-serif">
                     Hi, Ratih.
                 </h2>
-                <p className="text-zinc-400 mt-1">How is your heart feeling today?</p>
+                <p className="text-zinc-400 mt-1 font-serif italic">How is your heart feeling today?</p>
 
                 <div className="grid grid-cols-2 gap-4 mt-8">
                     {MOODS.map((moodItem) => {

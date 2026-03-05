@@ -106,11 +106,11 @@ export function TimeCapsule({ startDate, subtext = "Every second since we met." 
                     <div key={unit.label} className="flex flex-col items-center">
                         <div className="relative glass w-full aspect-square flex flex-col items-center justify-center rounded-2xl border-white/10 overflow-hidden group">
                             <div className="absolute inset-0 bg-white/[0.02] group-hover:bg-white/[0.05] transition-colors duration-500" />
-                            <span className="text-3xl md:text-5xl font-light text-white tracking-widest relative z-10">
+                            <span className="text-3xl md:text-5xl font-light text-white tracking-widest relative z-10 font-serif">
                                 {unit.value}
                             </span>
                         </div>
-                        <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-zinc-500 mt-4 font-medium">
+                        <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-zinc-500 mt-4 font-medium font-sans">
                             {unit.label}
                         </span>
                     </div>

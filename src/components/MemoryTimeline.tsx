@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { MOCK_MEMORIES, Memory } from "@/lib/mock-data";
 
@@ -8,6 +8,7 @@ import { Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 function MemoryCard({ memory, index, onDelete }: { memory: Memory; index: number; onDelete: (id: string) => void }) {
+    const [isActive, setIsActive] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
     const { scrollYProgress } = useScroll({
         target: cardRef,
@@ -76,7 +77,7 @@ function MemoryCard({ memory, index, onDelete }: { memory: Memory; index: number
                             e.stopPropagation();
                             handleDelete();
                         }}
-                        className="relative z-[60] opacity-40 hover:opacity-100 transition-all duration-300 text-zinc-500 hover:text-red-400 p-2 -m-2 cursor-pointer hover:scale-110 active:scale-95 touch-manipulation"
+                        className="relative z-[60] opacity-100 lg:opacity-40 lg:hover:opacity-100 transition-all duration-300 text-zinc-500 hover:text-red-400 p-2 -m-2 cursor-pointer hover:scale-110 active:scale-95 touch-manipulation"
                         title="Delete memory"
                     >
                         <Trash2 className="w-5 h-5" />
@@ -86,18 +87,21 @@ function MemoryCard({ memory, index, onDelete }: { memory: Memory; index: number
                     {memory.title}
                 </h3>
 
-                <div className="relative aspect-[4/5] sm:aspect-video rounded-xl overflow-hidden mb-4 bg-zinc-950 border border-white/5 shadow-lg">
+                <div
+                    className="relative aspect-[4/5] sm:aspect-video rounded-xl overflow-hidden mb-4 bg-zinc-950 border border-white/5 shadow-lg cursor-pointer"
+                    onClick={() => setIsActive(!isActive)}
+                >
                     {/* Dark filter overlay on images for aesthetic */}
-                    <div className="absolute inset-0 bg-black/20 mix-blend-overlay z-0 pointer-events-none transition-opacity duration-700 group-hover:opacity-0" />
+                    <div className={`absolute inset-0 bg-black/20 mix-blend-overlay z-0 pointer-events-none transition-opacity duration-700 ${isActive ? 'opacity-0' : 'group-hover:opacity-0'}`} />
 
                     <img
                         src={memory.imageUrl}
                         alt={memory.title}
-                        className="w-full h-full object-cover grayscale-[50%] contrast-125 transition-all duration-700 group-hover:scale-105 group-hover:grayscale-0"
+                        className={`w-full h-full object-cover grayscale-[50%] contrast-125 transition-all duration-700 ${isActive ? 'scale-105 grayscale-0' : 'group-hover:scale-105 group-hover:grayscale-0'}`}
                     />
-                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-6 backdrop-blur-sm">
+                    <div className={`absolute inset-0 bg-black/70 transition-opacity duration-300 flex items-center justify-center p-6 backdrop-blur-sm ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                         {/* Hidden "Handwritten Note" */}
-                        <p className="font-serif italic text-zinc-300 text-center transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 delay-100 font-light text-sm sm:text-base">
+                        <p className={`font-serif italic text-zinc-300 text-center transition-all duration-300 delay-100 font-light text-sm sm:text-base ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100'}`}>
                             {memory.curhatan}
                         </p>
                     </div>

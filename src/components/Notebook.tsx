@@ -178,7 +178,7 @@ export function Notebook() {
                                     </p>
                                     <button
                                         onClick={() => handleDelete(note.id)}
-                                        className="opacity-0 group-hover/note:opacity-100 transition-opacity text-zinc-600 hover:text-white"
+                                        className="opacity-100 lg:opacity-0 lg:group-hover/note:opacity-100 transition-opacity text-zinc-600 hover:text-white p-2 -m-2 touch-manipulation"
                                     >
                                         <Trash2 className="w-3.5 h-3.5" />
                                     </button>
