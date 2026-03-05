@@ -1,0 +1,121 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+
+interface TimeLeft {
+    years: number;
+    months: number;
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+}
+
+interface TimeCapsuleProps {
+    startDate: string; // ISO String format e.g. "2023-01-01T00:00:00"
+    subtext?: string;
+}
+
+export function TimeCapsule({ startDate, subtext = "Every second since we met." }: TimeCapsuleProps) {
+    const calculateTimeLeft = (): TimeLeft => {
+        const start = new Date(startDate).getTime();
+        const now = new Date().getTime();
+        let difference = now - start;
+
+        if (difference < 0) difference = 0;
+
+        // Approximate calculations for months and years
+        const years = Math.floor(difference / (1000 * 60 * 60 * 24 * 365.25));
+        difference -= years * (1000 * 60 * 60 * 24 * 365.25);
+
+        const months = Math.floor(difference / (1000 * 60 * 60 * 24 * 30.44));
+        difference -= months * (1000 * 60 * 60 * 24 * 30.44);
+
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        difference -= days * (1000 * 60 * 60 * 24);
+
+        const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((difference / 1000 / 60) % 60);
+        const seconds = Math.floor((difference / 1000) % 60);
+
+        return { years, months, days, hours, minutes, seconds };
+    };
+
+    const [timeLeft, setTimeLeft] = useState<TimeLeft>(calculateTimeLeft());
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+        const timer = setInterval(() => {
+            setTimeLeft(calculateTimeLeft());
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [startDate]);
+
+    // Format to 2 digits
+    const formatNumber = (num: number) => num.toString().padStart(2, '0');
+
+    if (!isMounted) return null; // Prevent hydration errors
+
+    const timeUnits = [
+        { label: "Years", value: timeLeft.years },
+        { label: "Months", value: timeLeft.months },
+        { label: "Days", value: timeLeft.days },
+        { label: "Hours", value: formatNumber(timeLeft.hours) },
+        { label: "Minutes", value: formatNumber(timeLeft.minutes) },
+        { label: "Seconds", value: formatNumber(timeLeft.seconds) },
+    ];
+
+    return (
+        <div className="w-full flex flex-col items-center justify-center py-12 lg:py-24 border-y border-white/5 relative overflow-hidden my-16">
+
+            {/* Minimalist Background Details */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-12 bg-gradient-to-b from-white/20 to-transparent" />
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[1px] h-12 bg-gradient-to-t from-white/20 to-transparent" />
+
+            <div className="text-center mb-12 relative z-10">
+                <motion.h2
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="text-sm tracking-[0.3em] uppercase text-zinc-500 mb-2 font-medium"
+                >
+                    Time Capsule
+                </motion.h2>
+                <motion.p
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.2 }}
+                    className="text-xl lg:text-3xl font-light text-zinc-300 italic font-serif"
+                >
+                    {subtext}
+                </motion.p>
+            </div>
+
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+                className="grid grid-cols-3 md:grid-cols-6 gap-4 md:gap-8 max-w-4xl mx-auto px-4 relative z-10"
+            >
+                {timeUnits.map((unit, index) => (
+                    <div key={unit.label} className="flex flex-col items-center">
+                        <div className="relative glass w-full aspect-square flex flex-col items-center justify-center rounded-2xl border-white/10 overflow-hidden group">
+                            <div className="absolute inset-0 bg-white/[0.02] group-hover:bg-white/[0.05] transition-colors duration-500" />
+                            <span className="text-3xl md:text-5xl font-light text-white tracking-widest relative z-10">
+                                {unit.value}
+                            </span>
+                        </div>
+                        <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-zinc-500 mt-4 font-medium">
+                            {unit.label}
+                        </span>
+                    </div>
+                ))}
+            </motion.div>
+        </div>
+    );
+}
