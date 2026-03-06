@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, FileText, Loader2, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAdmin } from "@/lib/admin-context";
+import { sendPushNotification } from "@/lib/push-notifications";
 
 interface Note {
     id: string;
@@ -96,6 +97,7 @@ export function Notebook() {
                     if (prev.find(n => n.id === data[0].id)) return prev;
                     return [data[0], ...prev];
                 });
+                sendPushNotification({ author: authorName, title: "📝 New Note!", body: `${authorName} wrote something in the notebook`, url: "/", tag: "notebook" });
             }
             setCurrentInput("");
         } catch (error) {

@@ -6,6 +6,7 @@ import { ImagePlus, Plus, X, Loader2 } from "lucide-react";
 import { Memory } from "@/lib/mock-data";
 import { supabase } from "@/lib/supabase";
 import { useAdmin } from "@/lib/admin-context";
+import { sendPushNotification } from "@/lib/push-notifications";
 
 interface MemoryUploadProps {
     onUpload: (memory: Memory) => void;
@@ -85,6 +86,7 @@ export function MemoryUpload({ onUpload }: MemoryUploadProps) {
                     author: data[0].author
                 };
                 onUpload(newMemory);
+                sendPushNotification({ author: authorName, title: "📸 New Memory!", body: `${authorName} added: ${data[0].title}`, url: "/memories", tag: "memory" });
             }
 
             // Reset form

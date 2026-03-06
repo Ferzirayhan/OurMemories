@@ -6,6 +6,7 @@ import { Lock, MailOpen, Clock, Plus, X, Send, Trash2, Unlock, Gift } from "luci
 import { FutureLetter } from "@/lib/mock-data";
 import { supabase } from "@/lib/supabase";
 import { useAdmin } from "@/lib/admin-context";
+import { sendPushNotification } from "@/lib/push-notifications";
 
 export function FutureLetters() {
     const { isAdmin, authorName } = useAdmin();
@@ -89,6 +90,7 @@ export function FutureLetters() {
             setLetters(prev => [...prev, data[0]].sort((a, b) => new Date(a.unlock_date).getTime() - new Date(b.unlock_date).getTime()));
             setNewLetter({ title: "", content: "", unlockDate: "" });
             setIsWriting(false);
+            sendPushNotification({ author: authorName, title: "✉️ New Future Letter!", body: "A new letter is waiting to be unlocked", url: "/secret-space", tag: "future-letter" });
         }
     };
 

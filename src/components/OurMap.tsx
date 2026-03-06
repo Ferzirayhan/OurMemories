@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Plus, X, Sparkles, Navigation, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAdmin } from "@/lib/admin-context";
+import { sendPushNotification } from "@/lib/push-notifications";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -84,6 +85,7 @@ export function OurMap() {
                 setNewPlace({ name: "", description: "", category: "Date" });
                 setIsAdding(false);
                 setClickLocation(null);
+                sendPushNotification({ author: authorName, title: "📍 New Place Pinned!", body: `${authorName} pinned: ${data[0].name}`, url: "/secret-space", tag: "map" });
             }
         } catch (error) {
             console.error("Error adding place:", error);

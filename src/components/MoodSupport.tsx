@@ -10,6 +10,7 @@ import {
 import { Mood } from "@/lib/mock-data";
 import { supabase } from "@/lib/supabase";
 import { useAdmin } from "@/lib/admin-context";
+import { sendPushNotification } from "@/lib/push-notifications";
 
 interface MoodLetter {
     title: string;
@@ -312,6 +313,7 @@ export function MoodSupport() {
 
             if (data) {
                 setVoiceNotes((prev) => [data[0], ...prev]);
+                sendPushNotification({ author: "Ezi", title: "🎙️ New Voice Message!", body: "Ezi recorded a voice note for you", url: "/", tag: "voice-note" });
             }
 
             setRecordedBlob(null);

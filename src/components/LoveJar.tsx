@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Plus, Send, X, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAdmin } from "@/lib/admin-context";
+import { sendPushNotification } from "@/lib/push-notifications";
 
 interface LoveReason {
     id: string;
@@ -96,6 +97,7 @@ export function LoveJar() {
 
                 setNewReason("");
                 setIsAdding(false);
+                sendPushNotification({ author: authorName, title: "💌 New Love Note!", body: `${authorName} dropped a new note in the Love Jar`, url: "/secret-space", tag: "love-jar" });
             }
         } catch (err: unknown) {
             console.error("Error adding reason:", err);

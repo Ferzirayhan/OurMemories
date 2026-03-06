@@ -5,6 +5,7 @@ import { Navigation } from "@/components/Navigation";
 import { AdminProvider } from "@/lib/admin-context";
 import { ThemeProvider } from "@/lib/theme-context";
 import { AdminLock } from "@/components/AdminLock";
+import { NotificationSetup } from "@/components/NotificationSetup";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -51,6 +52,7 @@ export default function RootLayout({
             <Navigation />
             {children}
             <AdminLock />
+            <NotificationSetup />
           </ThemeProvider>
         </AdminProvider>
       </body>

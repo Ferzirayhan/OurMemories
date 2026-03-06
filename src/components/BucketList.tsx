@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, Plus, Trash2, Send } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAdmin } from "@/lib/admin-context";
+import { sendPushNotification } from "@/lib/push-notifications";
 
 interface BucketItem {
     id: string;
@@ -90,6 +91,7 @@ export function BucketList() {
         } else if (data) {
             // Replace temp item with real one
             setItems((prev) => prev.map((i) => (i.id === tempId ? data : i)));
+            sendPushNotification({ author: authorName, title: "✅ New Bucket List!", body: `${authorName} added: ${title}`, url: "/", tag: "bucket-list" });
         }
     };
 

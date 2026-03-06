@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Flower2, Plus, Send, X, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAdmin } from "@/lib/admin-context";
+import { sendPushNotification } from "@/lib/push-notifications";
 
 interface GratitudeNote {
     id: string;
@@ -104,6 +105,7 @@ export function GratitudeWall() {
 
             if (data) {
                 setNotes(prev => prev.map(n => n.id === optimistic.id ? data[0] : n));
+                sendPushNotification({ author: authorName, title: "🌸 New Gratitude Note!", body: `${authorName} shared something they're grateful for`, url: "/secret-space", tag: "gratitude" });
             }
         } catch (err: unknown) {
             console.error("Error adding gratitude note:", err);
