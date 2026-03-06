@@ -6,8 +6,10 @@ import { MOCK_MEMORIES, Memory } from "@/lib/mock-data";
 
 import { Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useAdmin } from "@/lib/admin-context";
 
 function MemoryCard({ memory, index, onDelete }: { memory: Memory; index: number; onDelete: (id: string) => void }) {
+    const { isAdmin } = useAdmin();
     const [isActive, setIsActive] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
     const { scrollYProgress } = useScroll({
@@ -23,29 +25,42 @@ function MemoryCard({ memory, index, onDelete }: { memory: Memory; index: number
         if (!confirm("Are you sure you want to delete this memory?")) return;
 
         try {
-            // 1. Delete image from Storage if it exists
-            const urlParts = memory.imageUrl.split('/');
-            const fileName = urlParts[urlParts.length - 1];
-
-            if (fileName && memory.imageUrl.includes('supabase.co')) {
-                const { error: storageError } = await supabase.storage
-                    .from('memories')
-                    .remove([fileName]);
-
-                if (storageError) console.error("Error deleting image from storage:", storageError);
-            }
-
-            // 2. Delete from Database
-            const { error } = await supabase
+            // 1. Delete from Database first — use .select() to verify row was actually deleted
+            const { data, error } = await supabase
                 .from('memories')
                 .delete()
-                .eq('id', memory.id);
+                .eq('id', memory.id)
+                .select();
 
             if (error) throw error;
+
+            // If data is empty, the delete was silently blocked by RLS
+            if (!data || data.length === 0) {
+                throw new Error('RLS_BLOCKED');
+            }
+
+            // 2. Delete image from Storage if it exists
+            if (memory.imageUrl && memory.imageUrl.includes('supabase.co')) {
+                const bucketPath = memory.imageUrl.split('/storage/v1/object/public/memories/');
+                if (bucketPath.length > 1) {
+                    const filePath = decodeURIComponent(bucketPath[1]);
+                    const { error: storageError } = await supabase.storage
+                        .from('memories')
+                        .remove([filePath]);
+
+                    if (storageError) console.error("Error deleting image from storage:", storageError);
+                }
+            }
+
             onDelete(memory.id);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error deleting memory:", error);
-            alert("Failed to delete memory.");
+            const msg = error?.message || 'Unknown error';
+            if (msg === 'RLS_BLOCKED' || msg.includes('policy') || msg.includes('permission') || msg.includes('RLS')) {
+                alert('Gagal hapus memory! DELETE policy belum ada di Supabase.\n\nJalankan SQL ini di Supabase SQL Editor:\n\nCREATE POLICY "Allow public delete" ON memories FOR DELETE USING (true);');
+            } else {
+                alert(`Gagal hapus memory: ${msg}`);
+            }
         }
     };
 
@@ -67,23 +82,27 @@ function MemoryCard({ memory, index, onDelete }: { memory: Memory; index: number
                     }`}
             />
 
-            <div className="glass rounded-3xl p-6 w-full max-w-md group overflow-hidden relative cursor-default transition-colors border-white/5 hover:border-white/20 hover:bg-white/[0.08]">
+            <div className="glass rounded-3xl p-6 w-full max-w-md group overflow-hidden relative cursor-default transition-colors">
                 <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs font-semibold text-zinc-500 uppercase tracking-widest block">
-                        {memory.date}
-                    </span>
+                    <div>
+                        <span className="text-xs font-semibold uppercase tracking-widest block" style={{ color: 'var(--text-muted)' }}>
+                            {memory.date}
+                        </span>
+                        {memory.author && <span className="text-[10px] font-serif italic" style={{ color: 'var(--text-faint)' }}>— {memory.author}</span>}
+                    </div>
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
                             handleDelete();
                         }}
-                        className="relative z-[60] opacity-100 lg:opacity-40 lg:hover:opacity-100 transition-all duration-300 text-zinc-500 hover:text-red-400 p-2 -m-2 cursor-pointer hover:scale-110 active:scale-95 touch-manipulation"
+                        className="relative z-[60] opacity-100 lg:opacity-40 lg:hover:opacity-100 transition-all duration-300 hover:text-red-400 p-2 -m-2 cursor-pointer hover:scale-110 active:scale-95 touch-manipulation"
+                        style={{ color: 'var(--text-faint)' }}
                         title="Delete memory"
                     >
                         <Trash2 className="w-5 h-5" />
                     </button>
                 </div>
-                <h3 className="text-xl font-light text-zinc-200 mb-4">
+                <h3 className="text-xl font-light mb-4" style={{ color: 'var(--text-primary)' }}>
                     {memory.title}
                 </h3>
 
@@ -107,7 +126,7 @@ function MemoryCard({ memory, index, onDelete }: { memory: Memory; index: number
                     </div>
                 </div>
 
-                <p className="text-zinc-500 text-sm font-light leading-relaxed">
+                <p className="text-sm font-light leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                     {memory.description}
                 </p>
             </div>
@@ -129,7 +148,7 @@ export function MemoryTimeline({ initialMemories = [], onDelete }: { initialMemo
         <div className="relative py-10" ref={containerRef}>
             <div className="relative w-full max-w-4xl mx-auto mt-10">
                 {/* Central Vertical Line (hidden on small screens, shown on md+) */}
-                <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-[1px] bg-white/5 -translate-x-1/2">
+                <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-[1px] -translate-x-1/2" style={{ backgroundColor: 'var(--border)' }}>
                     <motion.div
                         style={{ height: lineHeight }}
                         className="w-full bg-gradient-to-b from-white/30 via-white/10 to-transparent origin-top"

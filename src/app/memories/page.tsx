@@ -26,7 +26,8 @@ export default function MemoriesPage() {
                     title: m.title,
                     description: m.description,
                     curhatan: m.curhatan,
-                    imageUrl: m.image_url
+                    imageUrl: m.image_url,
+                    author: m.author
                 })));
             }
             setIsLoading(false);
@@ -47,7 +48,8 @@ export default function MemoriesPage() {
                             title: payload.new.title,
                             description: payload.new.description,
                             curhatan: payload.new.curhatan,
-                            imageUrl: payload.new.image_url
+                            imageUrl: payload.new.image_url,
+                            author: payload.new.author
                         };
                         setMemories(prev => {
                             if (prev.find(m => m.id === newMemory.id)) return prev;
@@ -77,18 +79,18 @@ export default function MemoriesPage() {
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground tracking-wide font-sans relative overflow-hidden pt-32 pb-24">
+        <div className="min-h-screen tracking-wide font-sans relative overflow-hidden pt-32 pb-24" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
             {/* Background ambient light */}
-            <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[400px] bg-white/[0.03] blur-[100px] pointer-events-none z-0 rounded-b-full scale-y-50 origin-top" />
+            <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[400px] blur-[100px] pointer-events-none z-0 rounded-b-full scale-y-50 origin-top" style={{ backgroundColor: 'var(--accent-soft)' }} />
 
             <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
                 <div className="text-center mb-16">
-                    <h1 className="text-4xl md:text-5xl font-light tracking-[0.2em] uppercase text-zinc-200 mb-4">
+                    <h1 className="text-4xl md:text-5xl font-light tracking-[0.2em] uppercase mb-4" style={{ color: 'var(--text-primary)' }}>
                         Our Gallery
                     </h1>
-                    <div className="w-16 h-[1px] bg-white/20 mx-auto mb-6" />
-                    <p className="text-zinc-500 font-serif italic text-sm md:text-base max-w-md mx-auto">
+                    <div className="w-16 h-[1px] mx-auto mb-6" style={{ backgroundColor: 'var(--accent)' }} />
+                    <p className="font-serif italic text-sm md:text-base max-w-md mx-auto" style={{ color: 'var(--text-muted)' }}>
                         Every frame is a story. Add yours to the timeline.
                     </p>
                 </div>

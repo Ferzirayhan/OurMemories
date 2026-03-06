@@ -1,27 +1,80 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check } from "lucide-react";
-import { MOCK_BUCKETLIST, BucketItem } from "@/lib/mock-data";
+import { Check, Plus, Trash2, Send } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useAdmin } from "@/lib/admin-context";
+
+interface BucketItem {
+    id: string;
+    title: string;
+    is_completed: boolean;
+    author?: string;
+    created_at?: string;
+}
 
 export function BucketList() {
-    const [items, setItems] = useState<BucketItem[]>(MOCK_BUCKETLIST);
+    const { authorName } = useAdmin();
+    const [items, setItems] = useState<BucketItem[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [newItem, setNewItem] = useState("");
+    const [isAdding, setIsAdding] = useState(false);
 
-    const toggleItem = (id: string) => {
-        setItems(items.map(item =>
-            item.id === id ? { ...item, isCompleted: !item.isCompleted } : item
-        ));
+    useEffect(() => {
+        fetchItems();
+
+        const channel = supabase
+            .channel("bucket_list_changes")
+            .on("postgres_changes", { event: "*", schema: "public", table: "bucket_list" }, () => {
+                fetchItems();
+            })
+            .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
+    }, []);
+
+    const fetchItems = async () => {
+        const { data } = await supabase
+            .from("bucket_list")
+            .select("*")
+            .order("created_at", { ascending: true });
+        if (data) setItems(data);
+        setLoading(false);
+    };
+
+    const toggleItem = async (item: BucketItem) => {
+        await supabase
+            .from("bucket_list")
+            .update({ is_completed: !item.is_completed })
+            .eq("id", item.id);
+    };
+
+    const addItem = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newItem.trim()) return;
+
+        await supabase.from("bucket_list").insert({
+            title: newItem.trim(),
+            author: authorName,
+        });
+
+        setNewItem("");
+        setIsAdding(false);
+    };
+
+    const deleteItem = async (id: string) => {
+        await supabase.from("bucket_list").delete().eq("id", id);
     };
 
     return (
         <div className="w-full relative py-12">
             <div className="text-center mb-12">
-                <h3 className="text-2xl font-light text-zinc-300 tracking-[0.2em] uppercase mb-4">
+                <h3 className="text-2xl font-light tracking-[0.2em] uppercase mb-4" style={{ color: 'var(--text-secondary)' }}>
                     Our Bucket List
                 </h3>
-                <div className="w-12 h-[1px] bg-white/20 mx-auto mb-4" />
-                <p className="text-zinc-500 font-serif italic text-sm">
+                <div className="w-12 h-[1px] mx-auto mb-4" style={{ backgroundColor: 'var(--border)' }} />
+                <p className="font-serif italic text-sm" style={{ color: 'var(--text-muted)' }}>
                     Promises to keep. Places to go.
                 </p>
             </div>
@@ -32,27 +85,29 @@ export function BucketList() {
                         <motion.div
                             key={item.id}
                             initial={{ opacity: 0, y: 10 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: index * 0.1 }}
-                            className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex items-center gap-4 group hover:bg-white/[0.04] transition-colors cursor-pointer"
-                            onClick={() => toggleItem(item.id)}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ delay: index * 0.05 }}
+                            className="glass rounded-2xl p-4 flex items-center gap-4 group cursor-pointer transition-colors"
                         >
                             {/* Custom Checkbox */}
                             <div
-                                className={`w-6 h-6 rounded-full border flex flex-shrink-0 items-center justify-center transition-all duration-300 ${item.isCompleted
-                                        ? "bg-zinc-200 border-zinc-200 text-black"
-                                        : "border-zinc-700 text-transparent group-hover:border-zinc-500"
-                                    }`}
+                                className="w-6 h-6 rounded-full border flex shrink-0 items-center justify-center transition-all duration-300"
+                                style={{
+                                    backgroundColor: item.is_completed ? 'var(--accent)' : 'transparent',
+                                    borderColor: item.is_completed ? 'var(--accent)' : 'var(--text-faint)',
+                                    color: item.is_completed ? '#fff' : 'transparent'
+                                }}
+                                onClick={() => toggleItem(item)}
                             >
                                 <Check className="w-3.5 h-3.5" strokeWidth={3} />
                             </div>
 
                             {/* Item Title with Strikethrough Animation */}
-                            <div className="relative flex-1 py-1">
+                            <div className="relative flex-1 py-1" onClick={() => toggleItem(item)}>
                                 <span
-                                    className={`text-lg font-light transition-colors duration-500 ${item.isCompleted ? "text-zinc-600" : "text-zinc-200"
-                                        }`}
+                                    className="text-lg font-light transition-colors duration-500"
+                                    style={{ color: item.is_completed ? 'var(--text-faint)' : 'var(--text-primary)' }}
                                 >
                                     {item.title}
                                 </span>
@@ -61,15 +116,72 @@ export function BucketList() {
                                 <motion.div
                                     initial={false}
                                     animate={{
-                                        width: item.isCompleted ? "100%" : "0%",
-                                        opacity: item.isCompleted ? 1 : 0
+                                        width: item.is_completed ? "100%" : "0%",
+                                        opacity: item.is_completed ? 1 : 0
                                     }}
                                     transition={{ duration: 0.4, ease: "easeOut" }}
-                                    className="absolute left-0 top-1/2 -translate-y-1/2 h-[1px] bg-zinc-600 origin-left"
+                                    className="absolute left-0 top-1/2 -translate-y-1/2 h-[1px] origin-left"
+                                    style={{ backgroundColor: 'var(--text-faint)' }}
                                 />
                             </div>
+
+                            {/* Author tag */}
+                            {item.author && (
+                                <span className="text-[9px] font-serif italic opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--text-faint)' }}>
+                                    {item.author}
+                                </span>
+                            )}
+
+                            {/* Delete button — visible on hover for everyone */}
+                            <button
+                                onClick={() => deleteItem(item.id)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-400"
+                                style={{ color: 'var(--text-faint)' }}
+                            >
+                                <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                         </motion.div>
                     ))}
+                </AnimatePresence>
+
+                {/* Add new item */}
+                <AnimatePresence>
+                    {isAdding ? (
+                        <motion.form
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            onSubmit={addItem}
+                            className="glass rounded-2xl p-4 flex items-center gap-3"
+                        >
+                            <input
+                                type="text"
+                                value={newItem}
+                                onChange={(e) => setNewItem(e.target.value)}
+                                placeholder="What should we do together?"
+                                autoFocus
+                                className="flex-1 bg-transparent outline-none text-lg font-light"
+                                style={{ color: 'var(--text-primary)' }}
+                            />
+                            <button type="submit" className="p-2 rounded-full transition-colors" style={{ color: 'var(--accent)' }}>
+                                <Send className="w-4 h-4" />
+                            </button>
+                            <button type="button" onClick={() => { setIsAdding(false); setNewItem(""); }} className="p-2 rounded-full transition-colors" style={{ color: 'var(--text-faint)' }}>
+                                <Plus className="w-4 h-4 rotate-45" />
+                            </button>
+                        </motion.form>
+                    ) : (
+                        <motion.button
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            onClick={() => setIsAdding(true)}
+                            className="glass rounded-2xl p-4 flex items-center justify-center gap-2 transition-colors"
+                            style={{ color: 'var(--text-muted)' }}
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span className="text-xs uppercase tracking-widest">Add Dream</span>
+                        </motion.button>
+                    )}
                 </AnimatePresence>
             </div>
 
@@ -79,9 +191,10 @@ export function BucketList() {
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.8 }}
-                className="text-center text-xs text-zinc-600 mt-12 tracking-widest uppercase"
+                className="text-center text-xs mt-12 tracking-widest uppercase"
+                style={{ color: 'var(--text-faint)' }}
             >
-                To be continued...
+                {loading ? "Loading dreams..." : "To be continued..."}
             </motion.p>
         </div>
     );

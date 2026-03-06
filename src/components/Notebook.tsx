@@ -4,14 +4,17 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, FileText, Loader2, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useAdmin } from "@/lib/admin-context";
 
 interface Note {
     id: string;
     text: string;
     date: string;
+    author?: string;
 }
 
 export function Notebook() {
+    const { isAdmin, authorName } = useAdmin();
     const [notes, setNotes] = useState<Note[]>([]);
     const [currentInput, setCurrentInput] = useState("");
     const [isLoading, setIsLoading] = useState(true);
@@ -78,7 +81,8 @@ export function Notebook() {
                 .insert([
                     {
                         text: currentInput,
-                        date: dateStr
+                        date: dateStr,
+                        author: authorName
                     }
                 ])
                 .select();
@@ -122,30 +126,32 @@ export function Notebook() {
     return (
         <div className="w-full relative py-6">
             <div className="flex items-center gap-3 mb-6">
-                <FileText className="w-5 h-5 text-zinc-400" />
-                <h3 className="text-xl font-light text-zinc-300 tracking-[0.2em] uppercase">
+                <FileText className="w-5 h-5" style={{ color: 'var(--accent)' }} />
+                <h3 className="text-xl font-light tracking-[0.2em] uppercase" style={{ color: 'var(--text-secondary)' }}>
                     Daily Notebook
                 </h3>
             </div>
 
-            <p className="text-zinc-500 font-serif italic text-sm mb-6">
+            <p className="font-serif italic text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
                 Tell me about your day. What made you smile? Or what's on your mind?
             </p>
 
             {/* Editor Area */}
-            <div className="relative glass rounded-2xl border-white/5 overflow-hidden mb-8 group focus-within:border-white/20 transition-colors">
+            <div className="relative glass rounded-2xl overflow-hidden mb-8 group transition-colors">
                 <textarea
                     value={currentInput}
                     onChange={(e) => setCurrentInput(e.target.value)}
                     placeholder="Dear diary..."
                     disabled={isSaving}
-                    className="w-full min-h-[150px] bg-transparent resize-none outline-none p-6 text-zinc-200 placeholder:text-zinc-700 font-serif leading-relaxed disabled:opacity-50"
+                    className="w-full min-h-[150px] bg-transparent resize-none outline-none p-6 font-serif leading-relaxed disabled:opacity-50"
+                    style={{ color: 'var(--text-primary)' }}
                 />
                 <div className="absolute bottom-4 right-4">
                     <button
                         onClick={handleSave}
                         disabled={!currentInput.trim() || isSaving}
-                        className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
+                        className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
+                        style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
                     >
                         {isSaving ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -169,21 +175,26 @@ export function Notebook() {
                                 key={note.id}
                                 initial={{ opacity: 0, y: -20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="pl-6 border-l-2 border-white/10 relative group/note"
+                                className="pl-6 relative group/note"
+                                style={{ borderLeft: '2px solid var(--border)' }}
                             >
-                                <div className="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-zinc-800 border border-white/20" />
+                                <div className="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full" style={{ backgroundColor: 'var(--accent)', border: '2px solid var(--background)' }} />
                                 <div className="flex justify-between items-start mb-2">
-                                    <p className="text-xs text-zinc-500 uppercase tracking-widest font-medium">
-                                        {note.date}
-                                    </p>
+                                    <div>
+                                        <p className="text-xs uppercase tracking-widest font-medium" style={{ color: 'var(--text-muted)' }}>
+                                            {note.date}
+                                        </p>
+                                        {note.author && <p className="text-[10px] font-serif italic" style={{ color: 'var(--text-faint)' }}>— {note.author}</p>}
+                                    </div>
                                     <button
                                         onClick={() => handleDelete(note.id)}
-                                        className="opacity-100 lg:opacity-0 lg:group-hover/note:opacity-100 transition-opacity text-zinc-600 hover:text-white p-2 -m-2 touch-manipulation"
+                                        className="opacity-100 lg:opacity-0 lg:group-hover/note:opacity-100 transition-opacity hover:text-red-400 p-2 -m-2 touch-manipulation"
+                                        style={{ color: 'var(--text-faint)' }}
                                     >
                                         <Trash2 className="w-3.5 h-3.5" />
                                     </button>
                                 </div>
-                                <p className="text-zinc-300 font-serif leading-relaxed italic text-sm whitespace-pre-wrap">
+                                <p className="font-serif leading-relaxed italic text-sm whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
                                     "{note.text}"
                                 </p>
                             </motion.div>
@@ -192,8 +203,8 @@ export function Notebook() {
                 )}
 
                 {!isLoading && notes.length === 0 && (
-                    <div className="text-center py-12 border border-dashed border-white/5 rounded-2xl">
-                        <p className="text-zinc-600 font-light text-sm">No notes for today yet.</p>
+                    <div className="text-center py-12 rounded-2xl" style={{ border: '1px dashed var(--border)' }}>
+                        <p className="font-light text-sm" style={{ color: 'var(--text-faint)' }}>No notes for today yet.</p>
                     </div>
                 )}
             </div>

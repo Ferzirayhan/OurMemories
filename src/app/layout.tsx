@@ -2,6 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Outfit, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Navigation } from "@/components/Navigation";
+import { AdminProvider } from "@/lib/admin-context";
+import { ThemeProvider } from "@/lib/theme-context";
+import { AdminLock } from "@/components/AdminLock";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -38,8 +41,13 @@ export default function RootLayout({
       <body
         className={`${outfit.variable} ${playfair.variable} antialiased`}
       >
-        <Navigation />
-        {children}
+        <AdminProvider>
+          <ThemeProvider>
+            <Navigation />
+            {children}
+            <AdminLock />
+          </ThemeProvider>
+        </AdminProvider>
       </body>
     </html>
   );

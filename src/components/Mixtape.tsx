@@ -42,13 +42,13 @@ export function Mixtape() {
                 />
             )}
             <div className="text-center mb-6">
-                <h3 className="text-xl font-light text-zinc-300 tracking-widest uppercase mb-1">Our Playlist</h3>
-                <p className="text-zinc-500 font-serif italic text-xs">Songs that sound like you.</p>
+                <h3 className="text-xl font-light tracking-widest uppercase mb-1" style={{ color: 'var(--text-secondary)' }}>Our Playlist</h3>
+                <p className="font-serif italic text-xs" style={{ color: 'var(--text-muted)' }}>Songs that sound like you.</p>
             </div>
 
             <div className="flex flex-col xl:flex-row items-center gap-6 xl:gap-8 relative z-10">
                 {/* Vinyl Player UI */}
-                <div className="relative w-32 h-32 md:w-48 md:h-48 flex-shrink-0">
+                <div className="relative w-32 h-32 md:w-48 md:h-48 shrink-0">
                     <motion.div
                         animate={{ rotate: isPlaying ? 360 : 0 }}
                         transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
@@ -76,36 +76,38 @@ export function Mixtape() {
                         transition={{ duration: 0.5 }}
                         className="mb-4"
                     >
-                        <p className="text-[10px] text-zinc-500 tracking-widest uppercase mb-1">Now Playing</p>
-                        <h4 className="text-xl md:text-2xl font-light text-zinc-100 mb-1 leading-tight">{currentSong.title}</h4>
-                        <p className="text-sm text-zinc-400 font-medium">{currentSong.artist}</p>
+                        <p className="text-[10px] tracking-widest uppercase mb-1" style={{ color: 'var(--text-muted)' }}>Now Playing</p>
+                        <h4 className="text-xl md:text-2xl font-light mb-1 leading-tight" style={{ color: 'var(--text-primary)' }}>{currentSong.title}</h4>
+                        <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{currentSong.artist}</p>
                     </motion.div>
 
                     {/* Controls */}
                     <div className="flex items-center justify-center xl:justify-start gap-4 mb-4">
-                        <button onClick={prevSong} className="text-zinc-500 hover:text-white transition-colors">
+                        <button onClick={prevSong} className="transition-colors" style={{ color: 'var(--text-muted)' }}>
                             <SkipBack className="w-5 h-5" />
                         </button>
                         <button
                             onClick={togglePlay}
-                            className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg shadow-white/10"
+                            className="w-12 h-12 rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg"
+                            style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
                         >
-                            {isPlaying ? <Pause className="w-5 h-5 fill-black" /> : <Play className="w-5 h-5 fill-black ml-1" />}
+                            {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-1" />}
                         </button>
-                        <button onClick={nextSong} className="text-zinc-500 hover:text-white transition-colors">
+                        <button onClick={nextSong} className="transition-colors" style={{ color: 'var(--text-muted)' }}>
                             <SkipForward className="w-5 h-5" />
                         </button>
                     </div>
 
                     {/* Personal Memory Text */}
-                    <div className="bg-white/[0.03] border border-white/5 rounded-xl p-3 md:p-4 relative">
-                        <Disc3 className="hidden md:block absolute -top-3 -left-3 w-5 h-5 text-zinc-600 bg-background rounded-full" />
+                    <div className="glass rounded-xl p-3 md:p-4 relative">
+                        <Disc3 className="hidden md:block absolute -top-3 -left-3 w-5 h-5 rounded-full" style={{ color: 'var(--text-faint)', backgroundColor: 'var(--background)' }} />
                         <motion.p
                             key={`desc-${currentSong.id}`}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ duration: 0.8 }}
-                            className="text-xs md:text-sm font-serif italic text-zinc-300 leading-relaxed text-left"
+                            className="text-xs md:text-sm font-serif italic leading-relaxed text-left"
+                            style={{ color: 'var(--text-secondary)' }}
                         >
                             {currentSong.memoryText}
                         </motion.p>
@@ -114,7 +116,7 @@ export function Mixtape() {
             </div>
 
             {/* Decorative Background Blur */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/[0.02] blur-3xl rounded-full pointer-events-none" />
+            <div className="absolute top-0 right-0 w-64 h-64 blur-3xl rounded-full pointer-events-none" style={{ backgroundColor: 'var(--accent-soft)' }} />
         </div>
     );
 }

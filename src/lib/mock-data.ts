@@ -7,6 +7,7 @@ export interface Memory {
     description: string;
     curhatan: string; // Handwritten note
     imageUrl: string;
+    author?: string;
 }
 
 export const MOCK_MEMORIES: Memory[] = [
@@ -92,4 +93,100 @@ export const MOCK_BUCKETLIST: BucketItem[] = [
     { id: '3', title: 'Cook a failed viral recipe together in the kitchen', isCompleted: true },
     { id: '4', title: 'Watch the sunrise from the mountain top', isCompleted: false },
     { id: '5', title: 'Adopt a cute puppy', isCompleted: false },
+];
+export interface LoveReason {
+    id: string;
+    text: string;
+}
+
+export const MOCK_LOVE_REASONS: LoveReason[] = [
+    { id: '1', text: 'Cara kamu ketawa pas lagi nonton film horor walaupun sebenernya takut.' },
+    { id: '2', text: 'Cara kamu manggil aku pas lagi manja.' },
+    { id: '3', text: 'Semangat kamu yang nggak pernah luntur buat hal yang kamu suka.' },
+    { id: '4', text: 'Gimana kamu selalu inget detail kecil tentang aku.' },
+    { id: '5', text: 'Cara kamu naruh kepala di bahu aku pas lagi capek.' },
+];
+
+export interface FutureLetter {
+    id: string;
+    unlockDate: string; // ISO String
+    title: string;
+    content: string;
+    isOpened: boolean;
+    author?: string;
+}
+
+export const MOCK_FUTURE_LETTERS: FutureLetter[] = [
+    {
+        id: '1',
+        unlockDate: '2026-03-20T00:00:00',
+        title: 'Buat Ratih yang Lagi Capek',
+        content: 'Hai Ratih... Aku tau mungkin hari ini berat buat kamu. Cuman mau bilang, aku bangga banget sama kamu. Istirahat ya, besok kita mulai lagi bareng-bareng. I love you.',
+        isOpened: false
+    },
+    {
+        id: '2',
+        unlockDate: '2026-06-01T00:00:00',
+        title: 'Nanti Pas Kita Ketemu Lagi',
+        content: 'Nggak sabar buat momen ini. Aku udah nyiapin banyak cerita buat kamu.',
+        isOpened: false
+    }
+];
+
+export interface VoiceNote {
+    id: string;
+    title: string;
+    category: 'Kangen' | 'Tidur' | 'Semangat' | 'Random';
+    audioUrl: string;
+    date: string;
+}
+
+export const MOCK_VOICE_NOTES: VoiceNote[] = [
+    {
+        id: '1',
+        title: 'Pesan Semangat Pagi',
+        category: 'Semangat',
+        audioUrl: '/audio/semangat.mp3',
+        date: 'March 1, 2026'
+    },
+    {
+        id: '2',
+        title: 'Goodnight Ratih',
+        category: 'Tidur',
+        audioUrl: '/audio/night.mp3',
+        date: 'March 2, 2026'
+    }
+];
+
+export interface Milestone {
+    id: string;
+    date: string;
+    title: string;
+    description: string;
+    icon: string; // Lucide icon name or emoji
+    author?: string;
+}
+
+export const MOCK_MILESTONES: Milestone[] = [
+    {
+        id: '1',
+        date: '4 Feb 2026',
+        title: 'First Sight',
+        description: 'Hari pertama kita ketemu lagi setelah sekian lama.',
+        icon: 'Eye'
+    },
+    {
+        id: '2',
+        date: '10 Feb 2026',
+        title: 'First Long Talk',
+        description: 'Momen pas kita sadar kalau kita nyambung banget.',
+        icon: 'MessageCircle'
+    },
+    {
+        id: '3',
+        date: '14 Feb 2026',
+        title: 'Valentine s Day',
+        description: 'Momen kecil tapi bermakna bareng kamu.',
+        icon: 'Heart'
+    }
 ];

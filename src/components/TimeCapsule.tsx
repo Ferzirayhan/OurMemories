@@ -69,18 +69,19 @@ export function TimeCapsule({ startDate, subtext = "Every second since we met." 
     ];
 
     return (
-        <div className="w-full flex flex-col items-center justify-center py-12 lg:py-24 border-y border-white/5 relative overflow-hidden my-16">
+        <div className="w-full flex flex-col items-center justify-center py-12 lg:py-24 relative overflow-hidden my-16" style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
 
             {/* Minimalist Background Details */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-12 bg-gradient-to-b from-white/20 to-transparent" />
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[1px] h-12 bg-gradient-to-t from-white/20 to-transparent" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-12" style={{ background: 'linear-gradient(to bottom, var(--accent), transparent)' }} />
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[1px] h-12" style={{ background: 'linear-gradient(to top, var(--accent), transparent)' }} />
 
             <div className="text-center mb-12 relative z-10">
                 <motion.h2
                     initial={{ opacity: 0, y: 10 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="text-sm tracking-[0.3em] uppercase text-zinc-500 mb-2 font-medium"
+                    className="text-sm tracking-[0.3em] uppercase mb-2 font-medium"
+                    style={{ color: 'var(--text-muted)' }}
                 >
                     Time Capsule
                 </motion.h2>
@@ -89,7 +90,8 @@ export function TimeCapsule({ startDate, subtext = "Every second since we met." 
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.2 }}
-                    className="text-xl lg:text-3xl font-light text-zinc-300 italic font-serif"
+                    className="text-xl lg:text-3xl font-light italic font-serif"
+                    style={{ color: 'var(--text-secondary)' }}
                 >
                     {subtext}
                 </motion.p>
@@ -104,13 +106,13 @@ export function TimeCapsule({ startDate, subtext = "Every second since we met." 
             >
                 {timeUnits.map((unit, index) => (
                     <div key={unit.label} className="flex flex-col items-center">
-                        <div className="relative glass w-full aspect-square flex flex-col items-center justify-center rounded-2xl border-white/10 overflow-hidden group">
-                            <div className="absolute inset-0 bg-white/[0.02] group-hover:bg-white/[0.05] transition-colors duration-500" />
-                            <span className="text-3xl md:text-5xl font-light text-white tracking-widest relative z-10 font-serif">
+                        <div className="relative glass w-full aspect-square flex flex-col items-center justify-center rounded-2xl overflow-hidden group">
+                            <div className="absolute inset-0 transition-colors duration-500" style={{ backgroundColor: 'var(--accent-soft)' }} />
+                            <span className="text-3xl md:text-5xl font-light tracking-widest relative z-10 font-serif" style={{ color: 'var(--text-primary)' }}>
                                 {unit.value}
                             </span>
                         </div>
-                        <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-zinc-500 mt-4 font-medium font-sans">
+                        <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] mt-4 font-medium font-sans" style={{ color: 'var(--text-muted)' }}>
                             {unit.label}
                         </span>
                     </div>
