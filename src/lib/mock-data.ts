@@ -109,27 +109,27 @@ export const MOCK_LOVE_REASONS: LoveReason[] = [
 
 export interface FutureLetter {
     id: string;
-    unlockDate: string; // ISO String
+    unlock_date: string; // ISO String (from Supabase)
     title: string;
     content: string;
-    isOpened: boolean;
+    is_opened: boolean;
     author?: string;
 }
 
 export const MOCK_FUTURE_LETTERS: FutureLetter[] = [
     {
         id: '1',
-        unlockDate: '2026-03-20T00:00:00',
+        unlock_date: '2026-03-20T00:00:00',
         title: 'Buat Ratih yang Lagi Capek',
         content: 'Hai Ratih... Aku tau mungkin hari ini berat buat kamu. Cuman mau bilang, aku bangga banget sama kamu. Istirahat ya, besok kita mulai lagi bareng-bareng. I love you.',
-        isOpened: false
+        is_opened: false
     },
     {
         id: '2',
-        unlockDate: '2026-06-01T00:00:00',
+        unlock_date: '2026-06-01T00:00:00',
         title: 'Nanti Pas Kita Ketemu Lagi',
         content: 'Nggak sabar buat momen ini. Aku udah nyiapin banyak cerita buat kamu.',
-        isOpened: false
+        is_opened: false
     }
 ];
 

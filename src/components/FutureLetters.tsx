@@ -51,17 +51,17 @@ export function FutureLetters() {
     };
 
     const handleOpenLetter = async (letter: FutureLetter) => {
-        if (isLocked(letter.unlockDate)) return;
+        if (isLocked(letter.unlock_date)) return;
 
         // Mark as opened in DB if not already
-        if (!letter.isOpened) {
+        if (!letter.is_opened) {
             await supabase
                 .from('future_letters')
                 .update({ is_opened: true })
                 .eq('id', letter.id);
 
-            setLetters(prev => prev.map(l => l.id === letter.id ? { ...l, isOpened: true } : l));
-            setSelectedLetter({ ...letter, isOpened: true });
+            setLetters(prev => prev.map(l => l.id === letter.id ? { ...l, is_opened: true } : l));
+            setSelectedLetter({ ...letter, is_opened: true });
         } else {
             setSelectedLetter(letter);
         }
@@ -83,7 +83,7 @@ export function FutureLetters() {
             .select();
 
         if (data) {
-            setLetters(prev => [...prev, data[0]].sort((a, b) => new Date(a.unlockDate).getTime() - new Date(b.unlockDate).getTime()));
+            setLetters(prev => [...prev, data[0]].sort((a, b) => new Date(a.unlock_date).getTime() - new Date(b.unlock_date).getTime()));
             setNewLetter({ title: "", content: "", unlockDate: "" });
             setIsWriting(false);
         }
@@ -108,8 +108,8 @@ export function FutureLetters() {
     };
 
     // Separate letters by status
-    const unlockedLetters = letters.filter(l => !isLocked(l.unlockDate));
-    const lockedLetters = letters.filter(l => isLocked(l.unlockDate));
+    const unlockedLetters = letters.filter(l => !isLocked(l.unlock_date));
+    const lockedLetters = letters.filter(l => isLocked(l.unlock_date));
 
     return (
         <div className="space-y-6">
@@ -158,16 +158,16 @@ export function FutureLetters() {
                                     className="p-5 sm:p-6 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group"
                                     style={{
                                         backgroundColor: 'var(--glass-bg)',
-                                        borderColor: letter.isOpened ? 'var(--border)' : 'var(--accent)',
+                                        borderColor: letter.is_opened ? 'var(--border)' : 'var(--accent)',
                                     }}
                                 >
                                     {/* Glow for unopened */}
-                                    {!letter.isOpened && (
+                                    {!letter.is_opened && (
                                         <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(135deg, var(--accent-soft), transparent 60%)' }} />
                                     )}
                                     <div className="relative z-10 flex items-start gap-4">
-                                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: letter.isOpened ? 'var(--input-bg)' : 'var(--accent-soft)' }}>
-                                            {letter.isOpened
+                                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: letter.is_opened ? 'var(--input-bg)' : 'var(--accent-soft)' }}>
+                                            {letter.is_opened
                                                 ? <MailOpen className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
                                                 : <Gift className="w-4 h-4" style={{ color: 'var(--accent)' }} />
                                             }
@@ -176,8 +176,8 @@ export function FutureLetters() {
                                             <h3 className="text-base font-medium truncate" style={{ color: 'var(--text-primary)' }}>{letter.title}</h3>
                                             <div className="flex items-center gap-2 mt-1">
                                                 {letter.author && <span className="text-[10px] font-serif italic" style={{ color: 'var(--text-faint)' }}>from {letter.author}</span>}
-                                                <span className="text-[10px] uppercase tracking-widest" style={{ color: letter.isOpened ? 'var(--text-faint)' : 'var(--accent)' }}>
-                                                    {letter.isOpened ? "Opened" : "✨ Tap to open!"}
+                                                <span className="text-[10px] uppercase tracking-widest" style={{ color: letter.is_opened ? 'var(--text-faint)' : 'var(--accent)' }}>
+                                                    {letter.is_opened ? "Opened" : "✨ Tap to open!"}
                                                 </span>
                                             </div>
                                         </div>
@@ -230,11 +230,11 @@ export function FutureLetters() {
                                             <div className="flex items-center gap-2 mt-1">
                                                 <Lock className="w-2.5 h-2.5" style={{ color: 'var(--text-faint)' }} />
                                                 <span className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--text-faint)' }}>
-                                                    {getCountdown(letter.unlockDate)}
+                                                    {getCountdown(letter.unlock_date)}
                                                 </span>
                                             </div>
                                             <p className="text-[10px] mt-1" style={{ color: 'var(--text-faint)' }}>
-                                                Opens {new Date(letter.unlockDate).toLocaleDateString("en-US", { month: 'long', day: 'numeric', year: 'numeric' })}
+                                                Opens {new Date(letter.unlock_date).toLocaleDateString("en-US", { month: 'long', day: 'numeric', year: 'numeric' })}
                                             </p>
                                         </div>
                                         {isAdmin && (
@@ -292,7 +292,7 @@ export function FutureLetters() {
                                         {selectedLetter.title}
                                     </h2>
                                     <p className="text-zinc-400 text-xs font-medium uppercase tracking-widest">
-                                        {new Date(selectedLetter.unlockDate).toLocaleDateString("en-US", { month: 'long', day: 'numeric', year: 'numeric' })}
+                                        {new Date(selectedLetter.unlock_date).toLocaleDateString("en-US", { month: 'long', day: 'numeric', year: 'numeric' })}
                                     </p>
                                 </div>
 
