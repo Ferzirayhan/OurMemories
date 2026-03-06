@@ -44,27 +44,66 @@ export function BucketList() {
     };
 
     const toggleItem = async (item: BucketItem) => {
-        await supabase
+        // Optimistic update
+        setItems((prev) =>
+            prev.map((i) => (i.id === item.id ? { ...i, is_completed: !i.is_completed } : i))
+        );
+        const { error } = await supabase
             .from("bucket_list")
             .update({ is_completed: !item.is_completed })
             .eq("id", item.id);
+        if (error) {
+            // Revert on error
+            setItems((prev) =>
+                prev.map((i) => (i.id === item.id ? { ...i, is_completed: item.is_completed } : i))
+            );
+        }
     };
 
     const addItem = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newItem.trim()) return;
 
-        await supabase.from("bucket_list").insert({
-            title: newItem.trim(),
-            author: authorName,
-        });
+        const title = newItem.trim();
+        const tempId = `temp-${Date.now()}`;
 
+        // Optimistic update — show immediately
+        const optimisticItem: BucketItem = {
+            id: tempId,
+            title,
+            is_completed: false,
+            author: authorName,
+        };
+        setItems((prev) => [...prev, optimisticItem]);
         setNewItem("");
         setIsAdding(false);
+
+        const { data, error } = await supabase
+            .from("bucket_list")
+            .insert({ title, author: authorName })
+            .select()
+            .single();
+
+        if (error) {
+            // Revert on error
+            setItems((prev) => prev.filter((i) => i.id !== tempId));
+        } else if (data) {
+            // Replace temp item with real one
+            setItems((prev) => prev.map((i) => (i.id === tempId ? data : i)));
+        }
     };
 
     const deleteItem = async (id: string) => {
-        await supabase.from("bucket_list").delete().eq("id", id);
+        // Optimistic update — remove immediately
+        const removed = items.find((i) => i.id === id);
+        setItems((prev) => prev.filter((i) => i.id !== id));
+
+        const { error } = await supabase.from("bucket_list").delete().eq("id", id);
+        if (error) {
+            // Revert on error
+            if (removed) setItems((prev) => [...prev, removed]);
+            console.error("Delete error:", error);
+        }
     };
 
     return (
