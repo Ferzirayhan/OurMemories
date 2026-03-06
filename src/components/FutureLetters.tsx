@@ -213,7 +213,8 @@ export function FutureLetters() {
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            className="glass p-6 sm:p-8 rounded-2xl sm:rounded-3xl max-w-lg w-full"
+                            className="p-6 sm:p-8 rounded-2xl sm:rounded-3xl max-w-lg w-full border"
+                            style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex justify-between items-center mb-6">

@@ -344,6 +344,7 @@ export function MoodSupport() {
     };
 
     return (
+        <>
         <div className="glass rounded-2xl sm:rounded-3xl p-5 sm:p-8 relative overflow-hidden">
             {/* Background decoration */}
             <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full pointer-events-none" style={{ backgroundColor: "var(--accent-soft)" }} />
@@ -563,7 +564,37 @@ export function MoodSupport() {
                 </div>)}
             </motion.div>
 
-            {/* ===== RECORD MODAL — Admin only ===== */}
+            {/* Virtual Hug Animation Overlay */}
+            <AnimatePresence>
+                {showHug && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 1.5, filter: "blur(10px)" }}
+                        className="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-md rounded-3xl"
+                        style={{ backgroundColor: "var(--modal-overlay)" }}
+                    >
+                        <motion.div
+                            animate={{
+                                scale: [1, 1.2, 1],
+                                rotate: [-10, 10, -10],
+                            }}
+                            transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: "easeInOut",
+                            }}
+                            className="flex flex-col items-center"
+                        >
+                            <Heart className="w-24 h-24 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" style={{ color: "var(--accent)" }} fill="currentColor" />
+                            <p className="mt-4 font-light tracking-widest uppercase text-sm" style={{ color: "var(--text-secondary)" }}>Sending a virtual hug...</p>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+
+            {/* ===== RECORD MODAL — Rendered outside glass container to avoid overflow clip ===== */}
             <AnimatePresence>
                 {showRecordModal && (
                     <motion.div
@@ -730,35 +761,6 @@ export function MoodSupport() {
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            {/* Virtual Hug Animation Overlay */}
-            <AnimatePresence>
-                {showHug && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.5 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 1.5, filter: "blur(10px)" }}
-                        className="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-md rounded-3xl"
-                        style={{ backgroundColor: "var(--modal-overlay)" }}
-                    >
-                        <motion.div
-                            animate={{
-                                scale: [1, 1.2, 1],
-                                rotate: [-10, 10, -10],
-                            }}
-                            transition={{
-                                duration: 2,
-                                repeat: Infinity,
-                                ease: "easeInOut",
-                            }}
-                            className="flex flex-col items-center"
-                        >
-                            <Heart className="w-24 h-24 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" style={{ color: "var(--accent)" }} fill="currentColor" />
-                            <p className="mt-4 font-light tracking-widest uppercase text-sm" style={{ color: "var(--text-secondary)" }}>Sending a virtual hug...</p>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
+        </>
     );
 }

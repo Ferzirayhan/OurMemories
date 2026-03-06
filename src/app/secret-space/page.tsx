@@ -19,7 +19,7 @@ export default function SecretSpace() {
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12"
+                className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 sm:py-12"
             >
                 {/* Header */}
                 <header className="flex flex-col items-center text-center mb-12 sm:mb-24 pt-12 sm:pt-0">
@@ -41,7 +41,7 @@ export default function SecretSpace() {
                     </motion.div>
                 </header>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-20 mb-16 sm:mb-32">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 xl:gap-20 mb-16 sm:mb-32">
                     {/* Top Row: Love Jar & Future Letters */}
                     <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-12 items-stretch">
                         <section>

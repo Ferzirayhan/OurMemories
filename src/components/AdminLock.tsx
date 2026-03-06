@@ -83,7 +83,8 @@ export function AdminLock() {
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.9, opacity: 0, y: 20 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="glass p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] max-w-sm w-full text-center"
+                            className="p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] max-w-sm w-full text-center relative border"
+                            style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}
                         >
                             <button
                                 onClick={closePinModal}

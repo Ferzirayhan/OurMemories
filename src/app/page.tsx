@@ -20,14 +20,14 @@ export default function Home() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1.5 }}
-        className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-24 pt-20 sm:pt-24"
+        className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 xl:px-12 py-16 sm:py-24 pt-20 sm:pt-24"
       >
         <TimeCapsule
           startDate="2026-02-04T00:00:00"
           subtext="Every second since we met again."
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-16 my-12 sm:my-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 xl:gap-16 my-12 sm:my-24">
           {/* Left Column (Mood & Playlist) */}
           <section className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-24 self-start">
             <MoodSupport />

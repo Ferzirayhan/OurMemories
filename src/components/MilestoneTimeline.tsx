@@ -172,7 +172,8 @@ export function MilestoneTimeline() {
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            className="glass p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] max-w-lg w-full"
+                            className="p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] max-w-lg w-full border"
+                            style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex justify-between items-center mb-10">
