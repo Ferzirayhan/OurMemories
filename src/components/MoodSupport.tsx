@@ -19,6 +19,7 @@ interface MoodLetter {
 interface VoiceNote {
     id: string;
     title: string;
+    category?: string;
     audio_url: string;
     date: string;
     author?: string;
@@ -51,6 +52,7 @@ export function MoodSupport() {
     const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
     const [showRecordModal, setShowRecordModal] = useState(false);
     const [noteTitle, setNoteTitle] = useState("");
+    const [noteCategory, setNoteCategory] = useState<"Sad" | "Tired">("Sad");
     const [isUploading, setIsUploading] = useState(false);
     const [recordError, setRecordError] = useState<string | null>(null);
 
@@ -250,12 +252,23 @@ export function MoodSupport() {
         setRecordedBlob(null);
         setRecordedUrl(null);
         setNoteTitle("");
+        setNoteCategory("Sad");
         setRecordError(null);
         setShowRecordModal(false);
     };
 
+    // Check if a category slot is already taken
+    const getCategoryNote = (cat: string) => voiceNotes.find((n) => n.category === cat);
+
     const saveRecording = async () => {
         if (!recordedBlob || isUploading) return;
+
+        // Enforce max 1 per category
+        const existing = getCategoryNote(noteCategory);
+        if (existing) {
+            setRecordError(`Sudah ada voice untuk mood "${noteCategory}". Hapus dulu yang lama sebelum buat baru.`);
+            return;
+        }
 
         setIsUploading(true);
         try {
@@ -287,6 +300,7 @@ export function MoodSupport() {
                 .insert([
                     {
                         title: noteTitle || "Voice Message",
+                        category: noteCategory,
                         audio_url: publicUrl,
                         date: dateStr,
                         author: "Ezi",
@@ -404,8 +418,8 @@ export function MoodSupport() {
                                 </p>
                             </div>
 
-                            {/* Voice note player for Ratih — only on Sad/Tired */}
-                            {!isAdmin && (currentMood === "Sad" || currentMood === "Tired") && voiceNotes.length > 0 && (
+                            {/* Voice note player for Ratih — only on Sad/Tired, filtered by mood */}
+                            {!isAdmin && (currentMood === "Sad" || currentMood === "Tired") && voiceNotes.filter((n) => n.category === currentMood).length > 0 && (
                                 <div className="glass rounded-2xl sm:rounded-3xl p-5 sm:p-6 relative overflow-hidden">
                                     <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to right, var(--accent-soft), transparent)" }} />
                                     <div className="relative z-10">
@@ -414,7 +428,7 @@ export function MoodSupport() {
                                             <span className="text-[10px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>A voice from Ezi</span>
                                         </div>
                                         <div className="space-y-2">
-                                            {voiceNotes.map((note) => {
+                                            {voiceNotes.filter((n) => n.category === currentMood).map((note) => {
                                                 const isNotePlaying = playingId === note.id;
                                                 return (
                                                     <div key={note.id} className="flex items-center gap-3">
@@ -466,20 +480,40 @@ export function MoodSupport() {
                             </h4>
                         </div>
 
-                        {/* Record button — Admin only */}
-                        {isAdmin && (
-                            <button
-                                onClick={() => {
-                                    modalOpenedAt.current = Date.now();
-                                    setShowRecordModal(true);
-                                }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
-                                style={{ backgroundColor: "var(--accent)", color: "#fff" }}
-                            >
-                                <Mic className="w-3 h-3" />
-                                Record
-                            </button>
-                        )}
+                        <button
+                            onClick={() => {
+                                modalOpenedAt.current = Date.now();
+                                setRecordError(null);
+                                setShowRecordModal(true);
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+                            style={{ backgroundColor: "var(--accent)", color: "#fff" }}
+                        >
+                            <Mic className="w-3 h-3" />
+                            Record
+                        </button>
+                    </div>
+
+                    {/* Slot status */}
+                    <div className="flex gap-2 mb-4">
+                        {(["Sad", "Tired"] as const).map((cat) => {
+                            const has = getCategoryNote(cat);
+                            return (
+                                <div
+                                    key={cat}
+                                    className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] uppercase tracking-widest border"
+                                    style={{
+                                        borderColor: has ? 'var(--accent)' : 'var(--border)',
+                                        color: has ? 'var(--accent)' : 'var(--text-faint)',
+                                        backgroundColor: has ? 'var(--accent-soft)' : 'transparent',
+                                    }}
+                                >
+                                    {cat === "Sad" ? <Frown className="w-3 h-3" /> : <BatteryWarning className="w-3 h-3" />}
+                                    {cat}
+                                    {has ? " ✓" : " —"}
+                                </div>
+                            );
+                        })}
                     </div>
 
                     {/* Voice Notes List */}
@@ -524,11 +558,13 @@ export function MoodSupport() {
                                         {/* Info */}
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>{note.title}</p>
-                                            <div className="flex items-center gap-2 mt-0.5">
-                                                <span className="text-[10px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{note.date}</span>
-                                                {note.author && (
-                                                    <span className="text-[10px] font-serif italic" style={{ color: "var(--text-faint)" }}>— {note.author}</span>
+                                            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                                {note.category && (
+                                                    <span className="text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--accent-soft)', color: 'var(--accent)' }}>
+                                                        {note.category}
+                                                    </span>
                                                 )}
+                                                <span className="text-[10px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{note.date}</span>
                                             </div>
                                         </div>
 
@@ -726,6 +762,43 @@ export function MoodSupport() {
                                             color: "var(--text-primary)",
                                         }}
                                     />
+
+                                    {/* Mood category picker */}
+                                    <div>
+                                        <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: "var(--text-muted)" }}>Untuk mood:</p>
+                                        <div className="flex gap-2 justify-center">
+                                            {(["Sad", "Tired"] as const).map((cat) => {
+                                                const isSelected = noteCategory === cat;
+                                                const hasCat = getCategoryNote(cat);
+                                                return (
+                                                    <button
+                                                        key={cat}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setNoteCategory(cat);
+                                                            setRecordError(null);
+                                                        }}
+                                                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium transition-all border"
+                                                        style={{
+                                                            backgroundColor: isSelected ? 'var(--accent-soft)' : 'var(--input-bg)',
+                                                            borderColor: isSelected ? 'var(--accent)' : 'var(--border)',
+                                                            color: isSelected ? 'var(--accent)' : 'var(--text-muted)',
+                                                            opacity: hasCat ? 0.5 : 1,
+                                                        }}
+                                                    >
+                                                        {cat === "Sad" ? <Frown className="w-3.5 h-3.5" /> : <BatteryWarning className="w-3.5 h-3.5" />}
+                                                        {cat}
+                                                        {hasCat && <span className="text-[9px]">✗</span>}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        {getCategoryNote(noteCategory) && (
+                                            <p className="text-[10px] mt-2 font-serif italic" style={{ color: '#f87171' }}>
+                                                Slot &ldquo;{noteCategory}&rdquo; sudah terisi. Hapus dulu yang lama.
+                                            </p>
+                                        )}
+                                    </div>
 
                                     <div className="flex gap-3">
                                         <button
