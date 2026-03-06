@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { LoveJar } from "@/components/LoveJar";
 import { FutureLetters } from "@/components/FutureLetters";
 import { MilestoneTimeline } from "@/components/MilestoneTimeline";
+import { GratitudeWall } from "@/components/GratitudeWall";
 import dynamic from "next/dynamic";
 
 const OurMap = dynamic(() => import("@/components/OurMap"), { ssr: false });
@@ -52,7 +53,12 @@ export default function SecretSpace() {
                         </section>
                     </div>
 
-                    {/* Middle Row: Our Map */}
+                    {/* Middle Row: Gratitude Wall */}
+                    <div className="lg:col-span-12">
+                        <GratitudeWall />
+                    </div>
+
+                    {/* Our Map */}
                     <div className="lg:col-span-12">
                         <OurMap />
                     </div>

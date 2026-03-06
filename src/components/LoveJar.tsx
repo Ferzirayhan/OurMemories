@@ -149,14 +149,16 @@ export function LoveJar() {
                     </p>
                 </div>
 
-                {/* Write Button */}
-                <button
-                    onClick={() => setIsAdding(true)}
-                    className="absolute top-4 sm:top-8 right-4 sm:right-10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full glass flex items-center gap-1.5 sm:gap-2 transition-all z-20 group/btn"
-                >
-                    <Plus className="w-3 h-3 transition-colors" style={{ color: 'var(--text-muted)' }} />
-                    <span className="text-[9px] uppercase tracking-widest transition-colors" style={{ color: 'var(--text-muted)' }}>Write Note</span>
-                </button>
+                {/* Write Button — Admin only */}
+                {isAdmin && (
+                    <button
+                        onClick={() => setIsAdding(true)}
+                        className="absolute top-4 sm:top-8 right-4 sm:right-10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full glass flex items-center gap-1.5 sm:gap-2 transition-all z-20 group/btn"
+                    >
+                        <Plus className="w-3 h-3 transition-colors" style={{ color: 'var(--text-muted)' }} />
+                        <span className="text-[9px] uppercase tracking-widest transition-colors" style={{ color: 'var(--text-muted)' }}>Write Note</span>
+                    </button>
+                )}
 
                 {/* The Physical Jar Visualization */}
                 <div className="relative mt-12 mb-8">

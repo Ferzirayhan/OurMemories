@@ -8,6 +8,7 @@ import { TimeCapsule } from "@/components/TimeCapsule";
 import { Mixtape } from "@/components/Mixtape";
 import { BucketList } from "@/components/BucketList";
 import { Notebook } from "@/components/Notebook";
+import { DailyMemory } from "@/components/DailyMemory";
 
 export default function Home() {
   return (
@@ -30,6 +31,7 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 xl:gap-16 my-12 sm:my-24">
           {/* Left Column (Mood & Playlist) */}
           <section className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-24 self-start">
+            <DailyMemory />
             <MoodSupport />
             <div className="mt-8">
               <Mixtape />

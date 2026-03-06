@@ -107,22 +107,33 @@ function MemoryCard({ memory, index, onDelete }: { memory: Memory; index: number
                 </h3>
 
                 <div
-                    className="relative aspect-[4/5] sm:aspect-video rounded-xl overflow-hidden mb-4 bg-zinc-950 border border-white/5 shadow-lg cursor-pointer"
+                    className="relative rounded-xl overflow-hidden mb-4 cursor-pointer"
                     onClick={() => setIsActive(!isActive)}
                 >
-                    {/* Dark filter overlay on images for aesthetic */}
-                    <div className={`absolute inset-0 bg-black/20 mix-blend-overlay z-0 pointer-events-none transition-opacity duration-700 ${isActive ? 'opacity-0' : 'group-hover:opacity-0'}`} />
+                    {/* Polaroid Frame */}
+                    <div className="bg-white p-2 sm:p-3 rounded-xl shadow-xl transition-transform duration-500">
+                        <div className="relative aspect-[4/5] sm:aspect-video rounded-lg overflow-hidden bg-zinc-100">
+                            {/* Dark filter overlay on images for aesthetic */}
+                            <div className={`absolute inset-0 bg-black/20 mix-blend-overlay z-0 pointer-events-none transition-opacity duration-700 ${isActive ? 'opacity-0' : 'group-hover:opacity-0'}`} />
 
-                    <img
-                        src={memory.imageUrl}
-                        alt={memory.title}
-                        className={`w-full h-full object-cover grayscale-[50%] contrast-125 transition-all duration-700 ${isActive ? 'scale-105 grayscale-0' : 'group-hover:scale-105 group-hover:grayscale-0'}`}
-                    />
-                    <div className={`absolute inset-0 bg-black/70 transition-opacity duration-300 flex items-center justify-center p-6 backdrop-blur-sm ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                        {/* Hidden "Handwritten Note" */}
-                        <p className={`font-serif italic text-zinc-300 text-center transition-all duration-300 delay-100 font-light text-sm sm:text-base ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100'}`}>
-                            {memory.curhatan}
-                        </p>
+                            <img
+                                src={memory.imageUrl}
+                                alt={memory.title}
+                                className={`w-full h-full object-cover grayscale-[50%] contrast-125 transition-all duration-700 ${isActive ? 'scale-105 grayscale-0' : 'group-hover:scale-105 group-hover:grayscale-0'}`}
+                            />
+                            <div className={`absolute inset-0 bg-black/70 transition-opacity duration-300 flex items-center justify-center p-6 backdrop-blur-sm ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                {/* Hidden "Handwritten Note" */}
+                                <p className={`font-serif italic text-zinc-300 text-center transition-all duration-300 delay-100 font-light text-sm sm:text-base ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100'}`}>
+                                    {memory.curhatan}
+                                </p>
+                            </div>
+                        </div>
+                        {/* Polaroid caption strip */}
+                        <div className="pt-2 pb-1 px-1 text-center">
+                            <p className="text-[10px] sm:text-xs font-serif italic text-zinc-400 truncate">
+                                {memory.title} ♡
+                            </p>
+                        </div>
                     </div>
                 </div>
 
