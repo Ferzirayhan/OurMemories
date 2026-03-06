@@ -21,11 +21,10 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Missing author or title" }, { status: 400 });
         }
 
-        // Get all subscriptions that DON'T belong to the author (send to the other person)
+        // Send to ALL subscribers (both Ezi and Ratih get notified)
         const { data: subscriptions, error } = await supabase
             .from("push_subscriptions")
-            .select("*")
-            .neq("author", author);
+            .select("*");
 
         if (error) throw error;
 
