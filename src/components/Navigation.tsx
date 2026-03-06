@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
@@ -9,6 +10,23 @@ import { useTheme } from "@/lib/theme-context";
 export function Navigation() {
     const pathname = usePathname();
     const { theme, toggleTheme, isDark } = useTheme();
+    const [visible, setVisible] = useState(true);
+    const [lastScrollY, setLastScrollY] = useState(0);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const currentY = window.scrollY;
+            if (currentY > lastScrollY && currentY > 80) {
+                setVisible(false);
+            } else {
+                setVisible(true);
+            }
+            setLastScrollY(currentY);
+        };
+
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [lastScrollY]);
 
     const links = [
         { href: "/memories", label: "Memories" },
@@ -16,7 +34,11 @@ export function Navigation() {
     ];
 
     return (
-        <nav className="fixed top-3 sm:top-8 left-1/2 -translate-x-1/2 z-[100] flex justify-center w-[calc(100%-1.5rem)] sm:w-max max-w-[95vw]">
+        <motion.nav
+            animate={{ y: visible ? 0 : -100, opacity: visible ? 1 : 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="fixed top-3 sm:top-8 left-1/2 -translate-x-1/2 z-[100] flex justify-center w-[calc(100%-1.5rem)] sm:w-max max-w-[95vw]"
+        >
             <div className="glass px-3 sm:px-6 py-2 sm:py-3 rounded-full flex items-center gap-2 sm:gap-6 shadow-2xl w-full sm:w-auto justify-between sm:justify-start"
                 style={{ backgroundColor: 'var(--nav-bg)' }}
             >
@@ -77,6 +99,6 @@ export function Navigation() {
                     </motion.div>
                 </button>
             </div>
-        </nav>
+        </motion.nav>
     );
 }
