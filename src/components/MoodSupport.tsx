@@ -55,6 +55,7 @@ export function MoodSupport() {
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const chunksRef = useRef<Blob[]>([]);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const modalOpenedAt = useRef<number>(0);
 
     const today = new Intl.DateTimeFormat("en-US", {
         weekday: "long",
@@ -414,7 +415,10 @@ export function MoodSupport() {
                         {/* Record button — Admin only */}
                         {isAdmin && (
                             <button
-                                onClick={() => setShowRecordModal(true)}
+                                onClick={() => {
+                                    modalOpenedAt.current = Date.now();
+                                    setShowRecordModal(true);
+                                }}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
                                 style={{ backgroundColor: "var(--accent)", color: "#fff" }}
                             >
@@ -514,7 +518,11 @@ export function MoodSupport() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        onClick={cancelRecording}
+                        onClick={(e) => {
+                            // Prevent immediate close from mobile touch passthrough
+                            if (Date.now() - modalOpenedAt.current < 400) return;
+                            if (e.target === e.currentTarget) cancelRecording();
+                        }}
                         className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 backdrop-blur-xl"
                         style={{ backgroundColor: "var(--modal-overlay)" }}
                     >
