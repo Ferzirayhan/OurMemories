@@ -126,21 +126,30 @@ export function MoodSupport() {
     };
 
     // ===== RECORDING =====
+    const getSupportedMimeType = (): string | undefined => {
+        const types = [
+            "audio/webm;codecs=opus",
+            "audio/webm",
+            "audio/mp4",
+            "audio/ogg;codecs=opus",
+            "audio/ogg",
+        ];
+        if (typeof MediaRecorder !== "undefined" && typeof MediaRecorder.isTypeSupported === "function") {
+            for (const t of types) {
+                if (MediaRecorder.isTypeSupported(t)) return t;
+            }
+        }
+        return undefined; // let browser pick default
+    };
+
     const startRecording = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-            // Determine best supported mime type
-            let mimeType = "audio/webm";
-            if (typeof MediaRecorder.isTypeSupported === "function") {
-                if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
-                    mimeType = "audio/webm;codecs=opus";
-                } else if (MediaRecorder.isTypeSupported("audio/mp4")) {
-                    mimeType = "audio/mp4";
-                }
-            }
+            const mimeType = getSupportedMimeType();
+            const options: MediaRecorderOptions = mimeType ? { mimeType } : {};
 
-            const mediaRecorder = new MediaRecorder(stream, { mimeType });
+            const mediaRecorder = new MediaRecorder(stream, options);
             mediaRecorderRef.current = mediaRecorder;
             chunksRef.current = [];
 
@@ -149,13 +158,16 @@ export function MoodSupport() {
             };
 
             mediaRecorder.onstop = () => {
-                const blob = new Blob(chunksRef.current, { type: mimeType });
+                // Use the actual mimeType the recorder used
+                const actualType = mediaRecorder.mimeType || mimeType || "audio/webm";
+                const blob = new Blob(chunksRef.current, { type: actualType });
                 setRecordedBlob(blob);
                 setRecordedUrl(URL.createObjectURL(blob));
                 stream.getTracks().forEach((track) => track.stop());
             };
 
-            mediaRecorder.start(100);
+            // Don't pass timeslice — Safari doesn't support it well
+            mediaRecorder.start();
             setIsRecording(true);
             setRecordingTime(0);
 
@@ -170,6 +182,8 @@ export function MoodSupport() {
 
     const stopRecording = () => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+            // Request final data chunk before stopping
+            try { mediaRecorderRef.current.requestData(); } catch { /* ignore */ }
             mediaRecorderRef.current.stop();
         }
         if (timerRef.current) {
@@ -192,11 +206,16 @@ export function MoodSupport() {
 
         setIsUploading(true);
         try {
-            const ext = recordedBlob.type.includes("mp4") ? "mp4" : "webm";
+            // Determine file extension and content type from blob
+            const blobType = recordedBlob.type || "audio/webm";
+            let ext = "webm";
+            if (blobType.includes("mp4") || blobType.includes("m4a")) ext = "mp4";
+            else if (blobType.includes("ogg")) ext = "ogg";
+
             const fileName = `voice_${Date.now()}.${ext}`;
             const { error: uploadError } = await supabase.storage
                 .from("voice-notes")
-                .upload(fileName, recordedBlob, { contentType: recordedBlob.type });
+                .upload(fileName, recordedBlob, { contentType: blobType });
 
             if (uploadError) throw uploadError;
 
