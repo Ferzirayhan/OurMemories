@@ -84,10 +84,10 @@ export function FutureLetters() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                    <Clock className="w-5 h-5" style={{ color: 'var(--accent)' }} />
-                    <h2 className="text-2xl font-light font-serif italic" style={{ color: 'var(--text-secondary)' }}>Future Letters</h2>
+            <div className="flex items-center justify-between mb-6 sm:mb-8 flex-wrap gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
+                    <Clock className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: 'var(--accent)' }} />
+                    <h2 className="text-xl sm:text-2xl font-light font-serif italic" style={{ color: 'var(--text-secondary)' }}>Future Letters</h2>
                 </div>
                 <button
                     onClick={() => setIsWriting(true)}
@@ -157,7 +157,7 @@ export function FutureLetters() {
                             initial={{ y: 50, opacity: 0, rotate: -1 }}
                             animate={{ y: 0, opacity: 1, rotate: 0 }}
                             exit={{ y: 50, opacity: 0 }}
-                            className="bg-[#fcfaf2] p-8 md:p-16 rounded-sm max-w-2xl w-full text-zinc-800 shadow-[0_0_100px_rgba(0,0,0,0.5)] relative min-h-[500px] overflow-y-auto max-h-[90vh] flex flex-col items-center"
+                            className="bg-[#fcfaf2] p-6 sm:p-8 md:p-16 rounded-sm max-w-2xl w-full text-zinc-800 shadow-[0_0_100px_rgba(0,0,0,0.5)] relative min-h-[400px] sm:min-h-[500px] overflow-y-auto max-h-[90vh] flex flex-col items-center"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="w-full flex justify-end mb-8">
@@ -176,7 +176,7 @@ export function FutureLetters() {
                                             {selectedLetter.author ? `Letter from ${selectedLetter.author}` : "Private Letter"}
                                         </span>
                                     </div>
-                                    <h2 className="text-4xl md:text-5xl font-serif italic mb-4 leading-tight">
+                                    <h2 className="text-2xl sm:text-4xl md:text-5xl font-serif italic mb-4 leading-tight">
                                         {selectedLetter.title}
                                     </h2>
                                     <p className="text-zinc-400 text-xs font-medium uppercase tracking-widest">
@@ -213,7 +213,7 @@ export function FutureLetters() {
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            className="glass p-8 rounded-3xl max-w-lg w-full"
+                            className="glass p-6 sm:p-8 rounded-2xl sm:rounded-3xl max-w-lg w-full"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex justify-between items-center mb-6">

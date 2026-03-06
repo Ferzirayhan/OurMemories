@@ -122,7 +122,7 @@ export function MemoryUpload({ onUpload }: MemoryUploadProps) {
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="glass rounded-3xl p-8 relative"
+                    className="glass rounded-2xl sm:rounded-3xl p-5 sm:p-8 relative"
                 >
                     <button
                         onClick={() => setIsOpen(false)}

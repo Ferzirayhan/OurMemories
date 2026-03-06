@@ -79,14 +79,14 @@ export default function MemoriesPage() {
     };
 
     return (
-        <div className="min-h-screen tracking-wide font-sans relative overflow-hidden pt-32 pb-24" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
+        <div className="min-h-screen tracking-wide font-sans relative overflow-hidden pt-20 sm:pt-32 pb-16 sm:pb-24" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
             {/* Background ambient light */}
             <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[400px] blur-[100px] pointer-events-none z-0 rounded-b-full scale-y-50 origin-top" style={{ backgroundColor: 'var(--accent-soft)' }} />
 
             <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
                 <div className="text-center mb-16">
-                    <h1 className="text-4xl md:text-5xl font-light tracking-[0.2em] uppercase mb-4" style={{ color: 'var(--text-primary)' }}>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-light tracking-[0.15em] sm:tracking-[0.2em] uppercase mb-3 sm:mb-4" style={{ color: 'var(--text-primary)' }}>
                         Our Gallery
                     </h1>
                     <div className="w-16 h-[1px] mx-auto mb-6" style={{ backgroundColor: 'var(--accent)' }} />

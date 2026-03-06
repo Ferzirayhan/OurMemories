@@ -127,15 +127,15 @@ export function BucketList() {
 
                             {/* Author tag */}
                             {item.author && (
-                                <span className="text-[9px] font-serif italic opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--text-faint)' }}>
+                                <span className="text-[9px] font-serif italic opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" style={{ color: 'var(--text-faint)' }}>
                                     {item.author}
                                 </span>
                             )}
 
-                            {/* Delete button — visible on hover for everyone */}
+                            {/* Delete button — visible on mobile, hover on desktop */}
                             <button
                                 onClick={() => deleteItem(item.id)}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-400"
+                                className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:text-red-400 p-1 touch-manipulation"
                                 style={{ color: 'var(--text-faint)' }}
                             >
                                 <Trash2 className="w-3.5 h-3.5" />

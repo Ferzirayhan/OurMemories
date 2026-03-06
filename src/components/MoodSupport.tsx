@@ -2,29 +2,59 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Smile, Meh, BatteryWarning, Frown, Heart, Sparkles, Volume2, Play, Pause } from "lucide-react";
+import {
+    Smile, Meh, BatteryWarning, Frown, Heart, Sparkles,
+    Volume2, Play, Pause, Mic, Square, Trash2, Send, Loader2, X
+} from "lucide-react";
 import { Mood } from "@/lib/mock-data";
 import { supabase } from "@/lib/supabase";
+import { useAdmin } from "@/lib/admin-context";
 
 interface MoodLetter {
     title: string;
     content: string;
 }
 
-const MOODS: { label: Mood; icon: React.ReactNode; color: string }[] = [
-    { label: "Happy", icon: <Smile className="w-6 h-6" />, color: "glass" },
-    { label: "Neutral", icon: <Meh className="w-6 h-6" />, color: "glass" },
-    { label: "Tired", icon: <BatteryWarning className="w-6 h-6" />, color: "glass" },
-    { label: "Sad", icon: <Frown className="w-6 h-6" />, color: "glass" },
+interface VoiceNote {
+    id: string;
+    title: string;
+    audio_url: string;
+    date: string;
+    author?: string;
+    created_at: string;
+}
+
+const MOODS: { label: Mood; icon: React.ReactNode }[] = [
+    { label: "Happy", icon: <Smile className="w-6 h-6" /> },
+    { label: "Neutral", icon: <Meh className="w-6 h-6" /> },
+    { label: "Tired", icon: <BatteryWarning className="w-6 h-6" /> },
+    { label: "Sad", icon: <Frown className="w-6 h-6" /> },
 ];
 
 export function MoodSupport() {
+    const { isAdmin } = useAdmin();
     const [currentMood, setCurrentMood] = useState<Mood | null>(null);
     const [showHug, setShowHug] = useState(false);
-    const [isPlaying, setIsPlaying] = useState(false);
     const [moodLetter, setMoodLetter] = useState<MoodLetter | null>(null);
 
-    const audioRef = useRef<HTMLAudioElement | null>(null);
+    // Voice notes state
+    const [voiceNotes, setVoiceNotes] = useState<VoiceNote[]>([]);
+    const [loadingNotes, setLoadingNotes] = useState(true);
+    const [playingId, setPlayingId] = useState<string | null>(null);
+    const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+
+    // Recording state
+    const [isRecording, setIsRecording] = useState(false);
+    const [recordingTime, setRecordingTime] = useState(0);
+    const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+    const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
+    const [showRecordModal, setShowRecordModal] = useState(false);
+    const [noteTitle, setNoteTitle] = useState("");
+    const [isUploading, setIsUploading] = useState(false);
+
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const chunksRef = useRef<Blob[]>([]);
+    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const today = new Intl.DateTimeFormat("en-US", {
         weekday: "long",
@@ -32,26 +62,40 @@ export function MoodSupport() {
         day: "numeric",
     }).format(new Date());
 
+    // Fetch voice notes on mount
+    useEffect(() => {
+        fetchVoiceNotes();
+    }, []);
+
+    const fetchVoiceNotes = async () => {
+        setLoadingNotes(true);
+        const { data } = await supabase
+            .from("voice_notes")
+            .select("*")
+            .order("created_at", { ascending: false });
+        if (data) setVoiceNotes(data);
+        setLoadingNotes(false);
+    };
+
+    // Mood selection
     const handleMoodSelect = async (mood: Mood) => {
         setCurrentMood(mood);
         setMoodLetter(null);
 
-        // Fetch responsive letter from Supabase
         const { data } = await supabase
-            .from('mood_letters')
-            .select('title, content')
-            .eq('mood', mood)
+            .from("mood_letters")
+            .select("title, content")
+            .eq("mood", mood)
             .maybeSingle();
 
         if (data) {
             setMoodLetter(data);
         } else {
-            // Fallback content if no letter in DB
             const fallbacks: Record<Mood, MoodLetter> = {
-                'Happy': { title: 'Yay!', content: 'I am so happy that you are happy today! Keep that beautiful smile on your face. ❤️' },
-                'Neutral': { title: 'Thinking of You', content: 'Just a regular day, but remember you are special to me. Hope your day stays peaceful.' },
-                'Tired': { title: 'Rest Up, Love', content: 'You have worked so hard. Please take a moment to breathe and rest. You deserve it.' },
-                'Sad': { title: 'I am Right Here', content: 'I wish I could be there to give you a real hug. Remember that I love you no matter what. This too shall pass.' }
+                Happy: { title: "Yay!", content: "I am so happy that you are happy today! Keep that beautiful smile on your face. ❤️" },
+                Neutral: { title: "Thinking of You", content: "Just a regular day, but remember you are special to me. Hope your day stays peaceful." },
+                Tired: { title: "Rest Up, Love", content: "You have worked so hard. Please take a moment to breathe and rest. You deserve it." },
+                Sad: { title: "I am Right Here", content: "I wish I could be there to give you a real hug. Remember that I love you no matter what. This too shall pass." },
             };
             setMoodLetter(fallbacks[mood]);
         }
@@ -59,41 +103,191 @@ export function MoodSupport() {
         if (mood === "Sad" || mood === "Tired") {
             setShowHug(true);
             setTimeout(() => setShowHug(false), 3000);
-        } else {
-            if (isPlaying && audioRef.current) {
-                audioRef.current.pause();
-                setIsPlaying(false);
-            }
         }
     };
 
-    const toggleAudio = () => {
-        if (audioRef.current) {
-            if (isPlaying) {
-                audioRef.current.pause();
-            } else {
-                audioRef.current.play();
-            }
-            setIsPlaying(!isPlaying);
+    // ===== AUDIO PLAYBACK =====
+    const playNote = (note: VoiceNote) => {
+        if (playingId === note.id) {
+            audioPlayerRef.current?.pause();
+            setPlayingId(null);
+            return;
         }
+
+        if (audioPlayerRef.current) {
+            audioPlayerRef.current.pause();
+        }
+
+        const audio = new Audio(note.audio_url);
+        audioPlayerRef.current = audio;
+        audio.play().catch((err) => console.error("Playback failed:", err));
+        audio.onended = () => setPlayingId(null);
+        setPlayingId(note.id);
+    };
+
+    // ===== RECORDING =====
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            // Determine best supported mime type
+            let mimeType = "audio/webm";
+            if (typeof MediaRecorder.isTypeSupported === "function") {
+                if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
+                    mimeType = "audio/webm;codecs=opus";
+                } else if (MediaRecorder.isTypeSupported("audio/mp4")) {
+                    mimeType = "audio/mp4";
+                }
+            }
+
+            const mediaRecorder = new MediaRecorder(stream, { mimeType });
+            mediaRecorderRef.current = mediaRecorder;
+            chunksRef.current = [];
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) chunksRef.current.push(e.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(chunksRef.current, { type: mimeType });
+                setRecordedBlob(blob);
+                setRecordedUrl(URL.createObjectURL(blob));
+                stream.getTracks().forEach((track) => track.stop());
+            };
+
+            mediaRecorder.start(100);
+            setIsRecording(true);
+            setRecordingTime(0);
+
+            timerRef.current = setInterval(() => {
+                setRecordingTime((prev) => prev + 1);
+            }, 1000);
+        } catch (err) {
+            console.error("Mic error:", err);
+            alert("Tidak bisa akses mikrofon. Pastikan izin mikrofon sudah diberikan.");
+        }
+    };
+
+    const stopRecording = () => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+            mediaRecorderRef.current.stop();
+        }
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
+        setIsRecording(false);
+    };
+
+    const cancelRecording = () => {
+        stopRecording();
+        setRecordedBlob(null);
+        setRecordedUrl(null);
+        setNoteTitle("");
+        setShowRecordModal(false);
+    };
+
+    const saveRecording = async () => {
+        if (!recordedBlob || isUploading) return;
+
+        setIsUploading(true);
+        try {
+            const ext = recordedBlob.type.includes("mp4") ? "mp4" : "webm";
+            const fileName = `voice_${Date.now()}.${ext}`;
+            const { error: uploadError } = await supabase.storage
+                .from("voice-notes")
+                .upload(fileName, recordedBlob, { contentType: recordedBlob.type });
+
+            if (uploadError) throw uploadError;
+
+            const {
+                data: { publicUrl },
+            } = supabase.storage.from("voice-notes").getPublicUrl(fileName);
+
+            const dateStr = new Date().toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+            });
+
+            const { data, error } = await supabase
+                .from("voice_notes")
+                .insert([
+                    {
+                        title: noteTitle || "Voice Message",
+                        audio_url: publicUrl,
+                        date: dateStr,
+                        author: "Ezi",
+                    },
+                ])
+                .select();
+
+            if (error) throw error;
+
+            if (data) {
+                setVoiceNotes((prev) => [data[0], ...prev]);
+            }
+
+            setRecordedBlob(null);
+            setRecordedUrl(null);
+            setNoteTitle("");
+            setShowRecordModal(false);
+        } catch (err) {
+            console.error("Save error:", err);
+            alert("Gagal menyimpan rekaman. Coba lagi.");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const deleteNote = async (note: VoiceNote) => {
+        if (!confirm("Hapus voice note ini?")) return;
+
+        try {
+            if (note.audio_url.includes("voice-notes/")) {
+                const path = note.audio_url.split("/voice-notes/").pop();
+                if (path) {
+                    await supabase.storage.from("voice-notes").remove([decodeURIComponent(path)]);
+                }
+            }
+
+            const { error } = await supabase.from("voice_notes").delete().eq("id", note.id);
+            if (error) throw error;
+
+            setVoiceNotes((prev) => prev.filter((n) => n.id !== note.id));
+            if (playingId === note.id) {
+                audioPlayerRef.current?.pause();
+                setPlayingId(null);
+            }
+        } catch (err) {
+            console.error("Delete error:", err);
+            alert("Gagal hapus voice note.");
+        }
+    };
+
+    const formatTime = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m}:${s.toString().padStart(2, "0")}`;
     };
 
     return (
-        <div className="glass rounded-3xl p-8 relative overflow-hidden">
+        <div className="glass rounded-2xl sm:rounded-3xl p-5 sm:p-8 relative overflow-hidden">
             {/* Background decoration */}
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full pointer-events-none" style={{ backgroundColor: 'var(--accent-soft)' }} />
+            <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full pointer-events-none" style={{ backgroundColor: "var(--accent-soft)" }} />
 
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="relative z-10"
             >
-                <p className="text-sm font-medium uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>{today}</p>
-                <h2 className="text-3xl font-light mt-2 font-serif" style={{ color: 'var(--accent)' }}>
+                <p className="text-sm font-medium uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{today}</p>
+                <h2 className="text-2xl sm:text-3xl font-light mt-2 font-serif" style={{ color: "var(--accent)" }}>
                     Hi, Ratih.
                 </h2>
-                <p className="mt-1 font-serif italic" style={{ color: 'var(--text-secondary)' }}>How is your heart feeling today?</p>
+                <p className="mt-1 font-serif italic" style={{ color: "var(--text-secondary)" }}>How is your heart feeling today?</p>
 
+                {/* Mood Buttons */}
                 <div className="grid grid-cols-2 gap-4 mt-8">
                     {MOODS.map((moodItem) => {
                         const isSelected = currentMood === moodItem.label;
@@ -103,11 +297,11 @@ export function MoodSupport() {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleMoodSelect(moodItem.label)}
-                                className={`flex flex-col items-center justify-center gap-3 p-4 rounded-2xl border transition-all`}
+                                className="flex flex-col items-center justify-center gap-3 p-4 rounded-2xl border transition-all"
                                 style={{
-                                    backgroundColor: isSelected ? 'var(--accent-soft)' : 'var(--input-bg)',
-                                    borderColor: isSelected ? 'var(--accent)' : 'var(--border)',
-                                    color: isSelected ? 'var(--accent)' : 'var(--text-muted)'
+                                    backgroundColor: isSelected ? "var(--accent-soft)" : "var(--input-bg)",
+                                    borderColor: isSelected ? "var(--accent)" : "var(--border)",
+                                    color: isSelected ? "var(--accent)" : "var(--text-muted)",
                                 }}
                             >
                                 <div className={isSelected ? "animate-bounce" : ""}>
@@ -119,65 +313,281 @@ export function MoodSupport() {
                     })}
                 </div>
 
+                {/* Mood Letter */}
                 <AnimatePresence>
                     {currentMood && moodLetter && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="mt-8 space-y-6"
+                            className="mt-8"
                         >
-                            {/* Mood Responsive Letter */}
-                            <div className="glass p-8 rounded-3xl relative overflow-hidden group">
-                                <Sparkles className="absolute top-4 right-4 w-4 h-4 transition-colors" style={{ color: 'var(--accent)' }} />
-                                <h3 className="text-xl font-serif italic mb-4" style={{ color: 'var(--text-primary)' }}>{moodLetter.title}</h3>
-                                <p className="text-sm leading-relaxed font-serif" style={{ color: 'var(--text-secondary)' }}>
+                            <div className="glass p-6 sm:p-8 rounded-2xl sm:rounded-3xl relative overflow-hidden group">
+                                <Sparkles className="absolute top-4 right-4 w-4 h-4 transition-colors" style={{ color: "var(--accent)" }} />
+                                <h3 className="text-xl font-serif italic mb-4" style={{ color: "var(--text-primary)" }}>{moodLetter.title}</h3>
+                                <p className="text-sm leading-relaxed font-serif" style={{ color: "var(--text-secondary)" }}>
                                     {moodLetter.content}
                                 </p>
                             </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
-                            {(currentMood === "Sad" || currentMood === "Tired") && (
-                                <div className="glass rounded-3xl p-6 relative overflow-hidden">
-                                    <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to right, var(--accent-soft), transparent)' }} />
+                {/* ===== VOICE MESSAGES SECTION ===== */}
+                <div className="mt-8 pt-6" style={{ borderTop: "1px solid var(--border)" }}>
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                            <Mic className="w-4 h-4" style={{ color: "var(--accent)" }} />
+                            <h4 className="text-xs uppercase tracking-[0.2em] font-medium" style={{ color: "var(--text-muted)" }}>
+                                Voice Messages
+                            </h4>
+                        </div>
 
-                                    <div className="relative z-10 flex items-center gap-6">
+                        {/* Record button — Admin only */}
+                        {isAdmin && (
+                            <button
+                                onClick={() => setShowRecordModal(true)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+                                style={{ backgroundColor: "var(--accent)", color: "#fff" }}
+                            >
+                                <Mic className="w-3 h-3" />
+                                Record
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Voice Notes List */}
+                    {loadingNotes ? (
+                        <div className="text-center py-6">
+                            <Loader2 className="w-4 h-4 animate-spin mx-auto" style={{ color: "var(--text-muted)" }} />
+                        </div>
+                    ) : voiceNotes.length === 0 ? (
+                        <div className="text-center py-6 rounded-2xl" style={{ border: "1px dashed var(--border)" }}>
+                            <Volume2 className="w-5 h-5 mx-auto mb-2" style={{ color: "var(--text-faint)" }} />
+                            <p className="text-xs font-serif italic" style={{ color: "var(--text-faint)" }}>
+                                {isAdmin ? "Belum ada voice message. Rekam yang pertama!" : "No voice messages yet."}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            {voiceNotes.map((note) => {
+                                const isNotePlaying = playingId === note.id;
+                                return (
+                                    <motion.div
+                                        key={note.id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="glass rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-center gap-3 group"
+                                    >
+                                        {/* Play/Pause Button */}
                                         <button
-                                            onClick={toggleAudio}
-                                            className="w-14 h-14 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-transform shrink-0"
-                                            style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+                                            onClick={() => playNote(note)}
+                                            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 hover:scale-110 active:scale-95 transition-transform"
+                                            style={{
+                                                backgroundColor: isNotePlaying ? "var(--accent)" : "var(--input-bg)",
+                                                color: isNotePlaying ? "#fff" : "var(--text-muted)",
+                                            }}
                                         >
-                                            {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-1" />}
+                                            {isNotePlaying ? (
+                                                <Pause className="w-4 h-4" />
+                                            ) : (
+                                                <Play className="w-4 h-4 ml-0.5" />
+                                            )}
                                         </button>
 
-                                        <div className="min-w-0">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <Volume2 className="w-3 h-3" style={{ color: 'var(--text-muted)' }} />
-                                                <span className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Audio Support</span>
+                                        {/* Info */}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>{note.title}</p>
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                                <span className="text-[10px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{note.date}</span>
+                                                {note.author && (
+                                                    <span className="text-[10px] font-serif italic" style={{ color: "var(--text-faint)" }}>— {note.author}</span>
+                                                )}
                                             </div>
-                                            <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>A message for your heart</p>
                                         </div>
 
-                                        {/* Audio Element */}
-                                        <audio ref={audioRef} src="/audio/support.mp3" loop />
-                                    </div>
+                                        {/* Animated bars when playing */}
+                                        {isNotePlaying && (
+                                            <div className="flex items-end gap-[2px] h-4 mr-1">
+                                                {[...Array(4)].map((_, i) => (
+                                                    <motion.div
+                                                        key={i}
+                                                        animate={{ height: ["30%", "100%", "50%"] }}
+                                                        transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                                                        className="w-[3px] rounded-full"
+                                                        style={{ backgroundColor: "var(--accent)" }}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
 
-                                    {/* Visualizer bars */}
-                                    <div className="flex items-end gap-1 px-4 mt-6 opacity-20 h-4">
-                                        {[...Array(20)].map((_, i) => (
+                                        {/* Delete — Admin only */}
+                                        {isAdmin && (
+                                            <button
+                                                onClick={() => deleteNote(note)}
+                                                className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:text-red-400 p-1.5 touch-manipulation"
+                                                style={{ color: "var(--text-faint)" }}
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        )}
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            </motion.div>
+
+            {/* ===== RECORD MODAL — Admin only ===== */}
+            <AnimatePresence>
+                {showRecordModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={cancelRecording}
+                        className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 backdrop-blur-xl"
+                        style={{ backgroundColor: "var(--modal-overlay)" }}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="glass p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] max-w-sm w-full text-center relative"
+                        >
+                            <button
+                                onClick={cancelRecording}
+                                className="absolute top-4 right-4 sm:top-6 sm:right-6 transition-colors"
+                                style={{ color: "var(--text-muted)" }}
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+
+                            <Mic className="w-8 h-8 mx-auto mb-4" style={{ color: "var(--accent)" }} />
+                            <h3 className="text-xl font-serif italic font-light mb-1" style={{ color: "var(--text-primary)" }}>
+                                Voice Message
+                            </h3>
+                            <p className="text-[10px] uppercase tracking-[0.3em] mb-8" style={{ color: "var(--text-muted)" }}>
+                                Record a message for Ratih
+                            </p>
+
+                            {/* State: Not yet recorded */}
+                            {!recordedBlob && !isRecording && (
+                                <div>
+                                    <button
+                                        onClick={startRecording}
+                                        className="w-20 h-20 rounded-full mx-auto flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-lg"
+                                        style={{ backgroundColor: "var(--accent)", color: "#fff" }}
+                                    >
+                                        <Mic className="w-8 h-8" />
+                                    </button>
+                                    <p className="text-[10px] mt-6 uppercase tracking-widest" style={{ color: "var(--text-faint)" }}>
+                                        Tap to start recording
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* State: Recording */}
+                            {isRecording && (
+                                <div className="space-y-6">
+                                    <div className="relative w-20 h-20 mx-auto">
+                                        <motion.div
+                                            animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
+                                            transition={{ duration: 1.5, repeat: Infinity }}
+                                            className="absolute inset-0 rounded-full"
+                                            style={{ backgroundColor: "var(--accent)" }}
+                                        />
+                                        <button
+                                            onClick={stopRecording}
+                                            className="relative w-20 h-20 rounded-full flex items-center justify-center transition-all z-10"
+                                            style={{ backgroundColor: "#ef4444", color: "#fff" }}
+                                        >
+                                            <Square className="w-6 h-6" fill="currentColor" />
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <p className="text-2xl font-light font-mono tracking-widest" style={{ color: "var(--text-primary)" }}>
+                                            {formatTime(recordingTime)}
+                                        </p>
+                                        <p className="text-[10px] uppercase tracking-widest mt-1" style={{ color: "var(--text-muted)" }}>
+                                            Recording...
+                                        </p>
+                                    </div>
+                                    <div className="flex items-end justify-center gap-1 h-6">
+                                        {[...Array(12)].map((_, i) => (
                                             <motion.div
                                                 key={i}
-                                                animate={{ height: isPlaying ? ["20%", "100%", "40%"] : "20%" }}
-                                                transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.05 }}
-                                                className="flex-1 bg-white rounded-full"
+                                                animate={{ height: ["20%", "100%", "40%"] }}
+                                                transition={{ duration: 0.4, repeat: Infinity, delay: i * 0.06 }}
+                                                className="w-1 rounded-full"
+                                                style={{ backgroundColor: "var(--accent)" }}
                                             />
                                         ))}
                                     </div>
                                 </div>
                             )}
+
+                            {/* State: Recorded — Preview & Save */}
+                            {recordedBlob && !isRecording && (
+                                <div className="space-y-5">
+                                    <div className="glass rounded-xl p-4">
+                                        <audio src={recordedUrl || ""} controls className="w-full h-8" />
+                                        <p className="text-[10px] mt-2 uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
+                                            {formatTime(recordingTime)} recorded
+                                        </p>
+                                    </div>
+
+                                    <input
+                                        type="text"
+                                        value={noteTitle}
+                                        onChange={(e) => setNoteTitle(e.target.value)}
+                                        placeholder="Judul pesan (opsional)"
+                                        className="w-full rounded-xl p-4 text-sm outline-none text-center font-serif italic"
+                                        style={{
+                                            backgroundColor: "var(--input-bg)",
+                                            border: "1px solid var(--border)",
+                                            color: "var(--text-primary)",
+                                        }}
+                                    />
+
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => {
+                                                setRecordedBlob(null);
+                                                setRecordedUrl(null);
+                                                setRecordingTime(0);
+                                            }}
+                                            className="flex-1 p-4 rounded-xl text-sm font-medium transition-all"
+                                            style={{
+                                                backgroundColor: "var(--input-bg)",
+                                                color: "var(--text-muted)",
+                                                border: "1px solid var(--border)",
+                                            }}
+                                        >
+                                            Re-record
+                                        </button>
+                                        <button
+                                            onClick={saveRecording}
+                                            disabled={isUploading}
+                                            className="flex-1 p-4 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                                            style={{ backgroundColor: "var(--accent)", color: "#fff" }}
+                                        >
+                                            {isUploading ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <Send className="w-4 h-4" />
+                                            )}
+                                            {isUploading ? "Saving..." : "Save"}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </motion.div>
-                    )}
-                </AnimatePresence>
-            </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Virtual Hug Animation Overlay */}
             <AnimatePresence>
@@ -187,7 +597,7 @@ export function MoodSupport() {
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 1.5, filter: "blur(10px)" }}
                         className="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-md rounded-3xl"
-                        style={{ backgroundColor: 'var(--modal-overlay)' }}
+                        style={{ backgroundColor: "var(--modal-overlay)" }}
                     >
                         <motion.div
                             animate={{
@@ -201,9 +611,8 @@ export function MoodSupport() {
                             }}
                             className="flex flex-col items-center"
                         >
-                            {/* Updated Heart icon to be white/gray */}
-                            <Heart className="w-24 h-24 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" style={{ color: 'var(--accent)' }} fill="currentColor" />
-                            <p className="mt-4 font-light tracking-widest uppercase text-sm" style={{ color: 'var(--text-secondary)' }}>Sending a virtual hug...</p>
+                            <Heart className="w-24 h-24 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" style={{ color: "var(--accent)" }} fill="currentColor" />
+                            <p className="mt-4 font-light tracking-widest uppercase text-sm" style={{ color: "var(--text-secondary)" }}>Sending a virtual hug...</p>
                         </motion.div>
                     </motion.div>
                 )}

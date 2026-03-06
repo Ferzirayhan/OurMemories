@@ -32,7 +32,7 @@ export function Mixtape() {
     };
 
     return (
-        <div className="w-full glass rounded-3xl p-6 relative overflow-hidden group">
+        <div className="w-full glass rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-hidden group">
             {/* Audio Element */}
             {currentSong.audioUrl && (
                 <audio
@@ -48,7 +48,7 @@ export function Mixtape() {
 
             <div className="flex flex-col xl:flex-row items-center gap-6 xl:gap-8 relative z-10">
                 {/* Vinyl Player UI */}
-                <div className="relative w-32 h-32 md:w-48 md:h-48 shrink-0">
+                <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-48 md:h-48 shrink-0">
                     <motion.div
                         animate={{ rotate: isPlaying ? 360 : 0 }}
                         transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
@@ -61,7 +61,7 @@ export function Mixtape() {
                                 style={{ width: `${100 - i * 15}%`, height: `${100 - i * 15}%` }}
                             />
                         ))}
-                        <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-zinc-200 border-4 border-zinc-950 flex items-center justify-center relative z-10">
+                        <div className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 rounded-full bg-zinc-200 border-4 border-zinc-950 flex items-center justify-center relative z-10">
                             <div className="w-2 h-2 rounded-full bg-zinc-900" />
                         </div>
                     </motion.div>
@@ -77,7 +77,7 @@ export function Mixtape() {
                         className="mb-4"
                     >
                         <p className="text-[10px] tracking-widest uppercase mb-1" style={{ color: 'var(--text-muted)' }}>Now Playing</p>
-                        <h4 className="text-xl md:text-2xl font-light mb-1 leading-tight" style={{ color: 'var(--text-primary)' }}>{currentSong.title}</h4>
+                        <h4 className="text-lg sm:text-xl md:text-2xl font-light mb-1 leading-tight" style={{ color: 'var(--text-primary)' }}>{currentSong.title}</h4>
                         <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{currentSong.artist}</p>
                     </motion.div>
 

@@ -8,10 +8,7 @@ import dynamic from "next/dynamic";
 
 const OurMap = dynamic(() => import("@/components/OurMap"), { ssr: false });
 
-import Link from "next/link";
-
-
-import { ChevronLeft, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 export default function SecretSpace() {
     return (
@@ -22,19 +19,10 @@ export default function SecretSpace() {
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="relative z-10 max-w-6xl mx-auto px-6 py-12"
+                className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12"
             >
                 {/* Header */}
-                <header className="flex flex-col items-center text-center mb-24">
-                    <Link
-                        href="/"
-                        className="flex items-center gap-2 transition-colors mb-8 group"
-                        style={{ color: 'var(--text-muted)' }}
-                    >
-                        <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                        <span className="text-xs uppercase tracking-[0.2em]">Go Back Home</span>
-                    </Link>
-
+                <header className="flex flex-col items-center text-center mb-12 sm:mb-24 pt-12 sm:pt-0">
                     <motion.div
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
@@ -43,7 +31,7 @@ export default function SecretSpace() {
                         <div className="inline-flex items-center justify-center w-12 h-12 rounded-full glass mb-6">
                             <Sparkles className="w-5 h-5" style={{ color: 'var(--accent)' }} />
                         </div>
-                        <h1 className="text-4xl md:text-6xl font-light font-serif italic py-2" style={{ color: 'var(--text-primary)' }}>
+                        <h1 className="text-3xl sm:text-4xl md:text-6xl font-light font-serif italic py-2" style={{ color: 'var(--text-primary)' }}>
                             The Secret Space
                         </h1>
                         <p className="mt-4 max-w-md mx-auto italic font-serif" style={{ color: 'var(--text-muted)' }}>
@@ -53,7 +41,7 @@ export default function SecretSpace() {
                     </motion.div>
                 </header>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 mb-32">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-20 mb-16 sm:mb-32">
                     {/* Top Row: Love Jar & Future Letters */}
                     <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-12 items-stretch">
                         <section>
@@ -73,8 +61,8 @@ export default function SecretSpace() {
 
 
                 {/* Milestone Section - Full Width */}
-                <section className="mb-32">
-                    <div className="text-center mb-20">
+                <section className="mb-16 sm:mb-32">
+                    <div className="text-center mb-10 sm:mb-20">
                         <h2 className="text-3xl font-light font-serif italic mb-2" style={{ color: 'var(--text-secondary)' }}>Our Secret Milestones</h2>
                         <div className="w-24 h-[1px] mx-auto mt-4" style={{ backgroundColor: 'var(--border)' }} />
                     </div>

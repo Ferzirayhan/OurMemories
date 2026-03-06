@@ -137,13 +137,13 @@ export function Notebook() {
             </p>
 
             {/* Editor Area */}
-            <div className="relative glass rounded-2xl overflow-hidden mb-8 group transition-colors">
+            <div className="relative glass rounded-xl sm:rounded-2xl overflow-hidden mb-6 sm:mb-8 group transition-colors">
                 <textarea
                     value={currentInput}
                     onChange={(e) => setCurrentInput(e.target.value)}
                     placeholder="Dear diary..."
                     disabled={isSaving}
-                    className="w-full min-h-[150px] bg-transparent resize-none outline-none p-6 font-serif leading-relaxed disabled:opacity-50"
+                    className="w-full min-h-[120px] sm:min-h-[150px] bg-transparent resize-none outline-none p-4 sm:p-6 font-serif leading-relaxed disabled:opacity-50"
                     style={{ color: 'var(--text-primary)' }}
                 />
                 <div className="absolute bottom-4 right-4">

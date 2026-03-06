@@ -82,7 +82,7 @@ function MemoryCard({ memory, index, onDelete }: { memory: Memory; index: number
                     }`}
             />
 
-            <div className="glass rounded-3xl p-6 w-full max-w-md group overflow-hidden relative cursor-default transition-colors">
+            <div className="glass rounded-2xl sm:rounded-3xl p-4 sm:p-6 w-full max-w-md group overflow-hidden relative cursor-default transition-colors">
                 <div className="flex justify-between items-start mb-2">
                     <div>
                         <span className="text-xs font-semibold uppercase tracking-widest block" style={{ color: 'var(--text-muted)' }}>
@@ -102,7 +102,7 @@ function MemoryCard({ memory, index, onDelete }: { memory: Memory; index: number
                         <Trash2 className="w-5 h-5" />
                     </button>
                 </div>
-                <h3 className="text-xl font-light mb-4" style={{ color: 'var(--text-primary)' }}>
+                <h3 className="text-lg sm:text-xl font-light mb-3 sm:mb-4" style={{ color: 'var(--text-primary)' }}>
                     {memory.title}
                 </h3>
 
@@ -155,7 +155,7 @@ export function MemoryTimeline({ initialMemories = [], onDelete }: { initialMemo
                     />
                 </div>
 
-                <div className="flex flex-col gap-16 lg:gap-32 relative z-10 px-4 md:px-0 pb-32">
+                <div className="flex flex-col gap-8 sm:gap-16 lg:gap-32 relative z-10 px-2 sm:px-4 md:px-0 pb-16 sm:pb-32">
                     {initialMemories.map((memory, index) => (
                         <MemoryCard key={memory.id} memory={memory} index={index} onDelete={onDelete} />
                     ))}

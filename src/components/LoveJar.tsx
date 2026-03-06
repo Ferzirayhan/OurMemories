@@ -138,12 +138,12 @@ export function LoveJar() {
 
     return (
         <>
-            <div className="flex flex-col items-center justify-center p-8 glass rounded-[3rem] relative overflow-hidden group min-h-[500px]">
+            <div className="flex flex-col items-center justify-center p-4 sm:p-8 glass rounded-[2rem] sm:rounded-[3rem] relative overflow-hidden group min-h-[400px] sm:min-h-[500px]">
                 <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, var(--accent-soft), transparent)' }} />
 
                 {/* Header */}
-                <div className="absolute top-8 left-10 z-20">
-                    <h3 className="text-xl font-light font-serif italic" style={{ color: 'var(--text-secondary)' }}>The Love Jar</h3>
+                <div className="absolute top-4 sm:top-8 left-4 sm:left-10 z-20">
+                    <h3 className="text-lg sm:text-xl font-light font-serif italic" style={{ color: 'var(--text-secondary)' }}>The Love Jar</h3>
                     <p className="text-[9px] uppercase tracking-[0.3em] mt-1" style={{ color: 'var(--text-muted)' }}>
                         {reasons.length} Reasons Pinned
                     </p>
@@ -152,7 +152,7 @@ export function LoveJar() {
                 {/* Write Button */}
                 <button
                     onClick={() => setIsAdding(true)}
-                    className="absolute top-8 right-10 px-4 py-2 rounded-full glass flex items-center gap-2 transition-all z-20 group/btn"
+                    className="absolute top-4 sm:top-8 right-4 sm:right-10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full glass flex items-center gap-1.5 sm:gap-2 transition-all z-20 group/btn"
                 >
                     <Plus className="w-3 h-3 transition-colors" style={{ color: 'var(--text-muted)' }} />
                     <span className="text-[9px] uppercase tracking-widest transition-colors" style={{ color: 'var(--text-muted)' }}>Write Note</span>
@@ -164,9 +164,9 @@ export function LoveJar() {
                     <div className="absolute -inset-4 rounded-[4rem] blur-2xl pointer-events-none" style={{ backgroundColor: 'var(--jar-bg)' }} />
 
                     {/* Jar Body */}
-                    <div className="w-48 h-64 border-2 rounded-t-[60px] rounded-b-[40px] relative backdrop-blur-[2px] shadow-2xl overflow-hidden transition-colors" style={{ borderColor: 'var(--jar-border)', backgroundColor: 'var(--jar-bg)' }}>
+                    <div className="w-36 h-52 sm:w-48 sm:h-64 border-2 rounded-t-[60px] rounded-b-[40px] relative backdrop-blur-[2px] shadow-2xl overflow-hidden transition-colors" style={{ borderColor: 'var(--jar-border)', backgroundColor: 'var(--jar-bg)' }}>
                         {/* Jar neck/lid neck */}
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 border-x border-b rounded-b-2xl" style={{ borderColor: 'var(--jar-border)', backgroundColor: 'var(--jar-neck)' }} />
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 sm:w-32 h-5 sm:h-6 border-x border-b rounded-b-2xl" style={{ borderColor: 'var(--jar-border)', backgroundColor: 'var(--jar-neck)' }} />
 
                         {/* Cork Lid */}
                         <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-34 h-4 bg-[#8B4513]/40 border border-[#8B4513]/20 rounded-full blur-[0.5px]" />
@@ -257,7 +257,7 @@ export function LoveJar() {
                             initial={{ scale: 0.8, y: 20, rotate: -2 }}
                             animate={{ scale: 1, y: 0, rotate: 0 }}
                             exit={{ scale: 0.8, y: 20, opacity: 0 }}
-                            className="p-12 md:p-16 rounded-[3rem] max-w-lg w-full relative overflow-hidden text-center shadow-2xl"
+                            className="p-8 sm:p-12 md:p-16 rounded-[2rem] sm:rounded-[3rem] max-w-lg w-full relative overflow-hidden text-center shadow-2xl"
                             style={{ backgroundColor: currentReason.color || COLORS[0].value }}
                             onClick={(e) => e.stopPropagation()}
                         >
@@ -304,7 +304,7 @@ export function LoveJar() {
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            className="glass p-10 rounded-[3rem] max-w-md w-full"
+                            className="glass p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] max-w-md w-full"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex justify-between items-center mb-8">

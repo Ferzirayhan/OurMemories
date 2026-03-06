@@ -57,7 +57,7 @@ export function AdminLock() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.5 }}
                 onClick={isAdmin ? logout : handleOpenModal}
-                className="fixed bottom-6 right-6 z-[90] w-12 h-12 rounded-full glass flex items-center justify-center transition-all group shadow-lg"
+                className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[90] w-10 h-10 sm:w-12 sm:h-12 rounded-full glass flex items-center justify-center transition-all group shadow-lg"
                 title={isAdmin ? "Logout admin" : "Admin access"}
             >
                 {isAdmin ? (
@@ -83,7 +83,7 @@ export function AdminLock() {
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.9, opacity: 0, y: 20 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="glass p-10 rounded-[3rem] max-w-sm w-full text-center"
+                            className="glass p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] max-w-sm w-full text-center"
                         >
                             <button
                                 onClick={closePinModal}

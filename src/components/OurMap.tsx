@@ -133,14 +133,14 @@ export function OurMap() {
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <Navigation className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
-                    <h2 className="text-2xl font-light font-serif italic" style={{ color: 'var(--text-secondary)' }}>Our Memorable Map</h2>
+                <div className="flex items-center gap-2 sm:gap-3">
+                    <Navigation className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: 'var(--text-muted)' }} />
+                    <h2 className="text-lg sm:text-2xl font-light font-serif italic" style={{ color: 'var(--text-secondary)' }}>Our Memorable Map</h2>
                 </div>
-                <p className="text-[10px] uppercase tracking-widest hidden md:block" style={{ color: 'var(--text-muted)' }}>Click anywhere to pin a memory</p>
+                <p className="text-[9px] sm:text-[10px] uppercase tracking-widest hidden sm:block" style={{ color: 'var(--text-muted)' }}>Click anywhere to pin a memory</p>
             </div>
 
-            <div className="h-[600px] w-full glass rounded-[3rem] overflow-hidden relative z-10">
+            <div className="h-[350px] sm:h-[450px] md:h-[600px] w-full glass rounded-[1.5rem] sm:rounded-[3rem] overflow-hidden relative z-10">
                 <MapContainer
                     center={[-6.2088, 106.8456]}
                     zoom={11}
@@ -206,7 +206,7 @@ export function OurMap() {
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            className="glass p-10 rounded-[3rem] max-w-md w-full"
+                            className="glass p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] max-w-md w-full"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex justify-between items-center mb-10">

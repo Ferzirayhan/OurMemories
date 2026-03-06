@@ -90,7 +90,7 @@ export function MilestoneTimeline() {
         <>
             <div className="py-12 relative">
                 {/* Header with Add Button */}
-                <div className="flex justify-between items-center mb-16 relative z-10 px-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 sm:mb-16 relative z-10 px-4 sm:px-8 gap-3">
                     <div>
                         <h2 className="text-sm font-medium uppercase tracking-[0.4em]" style={{ color: 'var(--text-muted)' }}>Our Journey</h2>
                         <p className="font-serif italic text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>Every first step we took together.</p>
@@ -105,9 +105,9 @@ export function MilestoneTimeline() {
                     </button>
                 </div>
 
-                <div className="absolute left-1/2 top-0 bottom-0 w-[1px]" style={{ background: 'linear-gradient(to bottom, transparent, var(--border), transparent)' }} />
+                <div className="absolute left-1/2 top-0 bottom-0 w-[1px] hidden md:block" style={{ background: 'linear-gradient(to bottom, transparent, var(--border), transparent)' }} />
 
-                <div className="relative z-10 space-y-24">
+                <div className="relative z-10 space-y-12 sm:space-y-24">
                     {milestones.map((milestone, index) => {
                         const IconComponent = ICON_MAP[milestone.icon] || Heart;
                         const isEven = index % 2 === 0;
@@ -118,10 +118,10 @@ export function MilestoneTimeline() {
                                 initial={{ opacity: 0, y: 30 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
-                                className={`flex items-center justify-center w-full ${isEven ? 'flex-row' : 'flex-row-reverse'}`}
+                                className={`flex items-center justify-center w-full flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'}`}
                             >
                                 {/* Content */}
-                                <div className="w-1/2 px-8 flex flex-col items-center md:items-start text-center md:text-left">
+                                <div className="w-full md:w-1/2 px-4 sm:px-8 flex flex-col items-center text-center md:items-start md:text-left order-2 md:order-none mt-4 md:mt-0">
                                     <span className="text-[10px] uppercase tracking-[0.3em] mb-2 font-medium" style={{ color: 'var(--text-muted)' }}>
                                         {milestone.date}
                                     </span>
@@ -142,12 +142,12 @@ export function MilestoneTimeline() {
                                 </div>
 
                                 {/* Center Icon */}
-                                <div className="relative z-20">
+                                <div className="relative z-20 order-1 md:order-none">
                                     <motion.div
                                         whileInView={{ scale: [0, 1.2, 1] }}
-                                        className="w-14 h-14 rounded-full glass flex items-center justify-center"
+                                        className="w-10 h-10 sm:w-14 sm:h-14 rounded-full glass flex items-center justify-center"
                                     >
-                                        <IconComponent className="w-6 h-6" style={{ color: 'var(--text-secondary)' }} />
+                                        <IconComponent className="w-4 h-4 sm:w-6 sm:h-6" style={{ color: 'var(--text-secondary)' }} />
                                     </motion.div>
                                 </div>
 
@@ -172,7 +172,7 @@ export function MilestoneTimeline() {
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            className="glass p-10 rounded-[3rem] max-w-lg w-full"
+                            className="glass p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] max-w-lg w-full"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex justify-between items-center mb-10">

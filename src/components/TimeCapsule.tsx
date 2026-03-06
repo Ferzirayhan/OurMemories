@@ -69,7 +69,7 @@ export function TimeCapsule({ startDate, subtext = "Every second since we met." 
     ];
 
     return (
-        <div className="w-full flex flex-col items-center justify-center py-12 lg:py-24 relative overflow-hidden my-16" style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+        <div className="w-full flex flex-col items-center justify-center py-8 sm:py-12 lg:py-24 relative overflow-hidden my-8 sm:my-16" style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
 
             {/* Minimalist Background Details */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-12" style={{ background: 'linear-gradient(to bottom, var(--accent), transparent)' }} />
@@ -90,7 +90,7 @@ export function TimeCapsule({ startDate, subtext = "Every second since we met." 
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.2 }}
-                    className="text-xl lg:text-3xl font-light italic font-serif"
+                    className="text-lg sm:text-xl lg:text-3xl font-light italic font-serif"
                     style={{ color: 'var(--text-secondary)' }}
                 >
                     {subtext}
@@ -102,13 +102,13 @@ export function TimeCapsule({ startDate, subtext = "Every second since we met." 
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.8 }}
-                className="grid grid-cols-3 md:grid-cols-6 gap-4 md:gap-8 max-w-4xl mx-auto px-4 relative z-10"
+                className="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-4 md:gap-8 max-w-4xl mx-auto px-2 sm:px-4 relative z-10"
             >
                 {timeUnits.map((unit, index) => (
                     <div key={unit.label} className="flex flex-col items-center">
                         <div className="relative glass w-full aspect-square flex flex-col items-center justify-center rounded-2xl overflow-hidden group">
                             <div className="absolute inset-0 transition-colors duration-500" style={{ backgroundColor: 'var(--accent-soft)' }} />
-                            <span className="text-3xl md:text-5xl font-light tracking-widest relative z-10 font-serif" style={{ color: 'var(--text-primary)' }}>
+                            <span className="text-2xl sm:text-3xl md:text-5xl font-light tracking-widest relative z-10 font-serif" style={{ color: 'var(--text-primary)' }}>
                                 {unit.value}
                             </span>
                         </div>
