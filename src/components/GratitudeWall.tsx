@@ -199,10 +199,10 @@ export function GratitudeWall() {
                                         </p>
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[9px] font-serif italic" style={{ color: 'var(--text-faint)' }}>
+                                                <span className="text-[9px] font-serif italic" style={{ color: 'var(--text-muted)' }}>
                                                     — {note.author}
                                                 </span>
-                                                <span className="text-[8px] uppercase tracking-wider" style={{ color: 'var(--text-faint)' }}>
+                                                <span className="text-[8px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                                                     {new Date(note.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                                 </span>
                                             </div>
