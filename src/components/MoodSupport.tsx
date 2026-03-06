@@ -575,15 +575,16 @@ export function MoodSupport() {
                             if (Date.now() - modalOpenedAt.current < 400) return;
                             if (e.target === e.currentTarget) cancelRecording();
                         }}
-                        className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 backdrop-blur-xl"
-                        style={{ backgroundColor: "var(--modal-overlay)" }}
+                        className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 backdrop-blur-2xl"
+                        style={{ backgroundColor: "rgba(0,0,0,0.85)" }}
                     >
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.9, opacity: 0, y: 20 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="glass p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] max-w-sm w-full text-center relative"
+                            className="p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] max-w-sm w-full text-center relative border"
+                            style={{ backgroundColor: "var(--card)", borderColor: "var(--border)" }}
                         >
                             <button
                                 onClick={cancelRecording}
