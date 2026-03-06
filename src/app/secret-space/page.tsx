@@ -3,8 +3,8 @@
 import { motion } from "framer-motion";
 import { LoveJar } from "@/components/LoveJar";
 import { FutureLetters } from "@/components/FutureLetters";
-import { MilestoneTimeline } from "@/components/MilestoneTimeline";
 import { GratitudeWall } from "@/components/GratitudeWall";
+import { DearEzi } from "@/components/DearEzi";
 import dynamic from "next/dynamic";
 
 const OurMap = dynamic(() => import("@/components/OurMap"), { ssr: false });
@@ -53,6 +53,11 @@ export default function SecretSpace() {
                         </section>
                     </div>
 
+                    {/* Dear Ezi — Safe space to share feelings */}
+                    <div className="lg:col-span-12">
+                        <DearEzi />
+                    </div>
+
                     {/* Middle Row: Gratitude Wall */}
                     <div className="lg:col-span-12">
                         <GratitudeWall />
@@ -65,15 +70,6 @@ export default function SecretSpace() {
 
                 </div>
 
-
-                {/* Milestone Section - Full Width */}
-                <section className="mb-16 sm:mb-32">
-                    <div className="text-center mb-10 sm:mb-20">
-                        <h2 className="text-3xl font-light font-serif italic mb-2" style={{ color: 'var(--text-secondary)' }}>Our Secret Milestones</h2>
-                        <div className="w-24 h-[1px] mx-auto mt-4" style={{ backgroundColor: 'var(--border)' }} />
-                    </div>
-                    <MilestoneTimeline />
-                </section>
 
                 <footer className="text-center py-20 opacity-30" style={{ borderTop: '1px solid var(--border)' }}>
                     <p className="text-[10px] uppercase tracking-[0.4em] font-medium" style={{ color: 'var(--text-muted)' }}>

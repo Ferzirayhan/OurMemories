@@ -137,9 +137,19 @@ export function FutureLetters() {
             </div>
 
             {loading ? (
-                <div className="text-center py-12">
-                    <Clock className="w-5 h-5 animate-spin mx-auto mb-2" style={{ color: 'var(--text-faint)' }} />
-                    <p className="text-xs font-serif italic" style={{ color: 'var(--text-faint)' }}>Loading letters...</p>
+                <div className="space-y-3">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="animate-pulse rounded-2xl p-5 space-y-3" style={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full" style={{ backgroundColor: 'var(--input-bg)' }} />
+                                <div className="flex-1 space-y-2">
+                                    <div className="h-3 w-1/3 rounded" style={{ backgroundColor: 'var(--input-bg)' }} />
+                                    <div className="h-2 w-1/5 rounded" style={{ backgroundColor: 'var(--input-bg)' }} />
+                                </div>
+                            </div>
+                            <div className="h-3 w-2/3 rounded" style={{ backgroundColor: 'var(--input-bg)' }} />
+                        </div>
+                    ))}
                 </div>
             ) : letters.length === 0 ? (
                 <div className="text-center py-12 rounded-2xl" style={{ border: '1px dashed var(--border)' }}>

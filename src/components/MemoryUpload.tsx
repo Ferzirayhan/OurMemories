@@ -12,6 +12,52 @@ interface MemoryUploadProps {
     onUpload: (memory: Memory) => void;
 }
 
+// Compress image using canvas — max 1200px, quality 0.8
+async function compressImage(file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.8): Promise<File> {
+    // Skip non-image files or already small files (< 500KB)
+    if (!file.type.startsWith("image/") || file.size < 500 * 1024) {
+        return file;
+    }
+
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            let { width, height } = img;
+
+            // Calculate new dimensions maintaining aspect ratio
+            if (width > maxWidth || height > maxHeight) {
+                const ratio = Math.min(maxWidth / width, maxHeight / height);
+                width = Math.round(width * ratio);
+                height = Math.round(height * ratio);
+            }
+
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) { resolve(file); return; }
+
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob(
+                (blob) => {
+                    if (!blob) { resolve(file); return; }
+                    const compressed = new File([blob], file.name, {
+                        type: "image/jpeg",
+                        lastModified: Date.now(),
+                    });
+                    // Only use compressed if it's actually smaller
+                    resolve(compressed.size < file.size ? compressed : file);
+                },
+                "image/jpeg",
+                quality
+            );
+        };
+        img.onerror = () => reject(new Error("Failed to load image for compression"));
+        img.src = URL.createObjectURL(file);
+    });
+}
+
 export function MemoryUpload({ onUpload }: MemoryUploadProps) {
     const { authorName } = useAdmin();
     const [isOpen, setIsOpen] = useState(false);
@@ -23,11 +69,16 @@ export function MemoryUpload({ onUpload }: MemoryUploadProps) {
     const [file, setFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
         if (selectedFile) {
-            setFile(selectedFile);
             setPreviewUrl(URL.createObjectURL(selectedFile));
+            try {
+                const compressed = await compressImage(selectedFile);
+                setFile(compressed);
+            } catch {
+                setFile(selectedFile);
+            }
         }
     };
 

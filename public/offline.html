@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Memories — Offline</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Georgia', serif;
+            background: #faf8f5;
+            color: #3d3830;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 400px;
+        }
+        .heart {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 300;
+            font-style: italic;
+            margin-bottom: 1rem;
+            color: #a06b3e;
+        }
+        p {
+            font-size: 0.875rem;
+            line-height: 1.8;
+            color: #8a7e6b;
+            margin-bottom: 2rem;
+        }
+        button {
+            background: #a06b3e;
+            color: #fff;
+            border: none;
+            padding: 0.875rem 2rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.85; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="heart">💕</div>
+        <h1>You&rsquo;re Offline</h1>
+        <p>
+            Our memories are always in our hearts, even without internet.
+            <br>Check your connection and try again.
+        </p>
+        <button onclick="window.location.reload()">Try Again</button>
+    </div>
+</body>
+</html>

@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Plus, X, Sparkles, Navigation, Trash2 } from "lucide-react";
+import { MapPin, Plus, X, Sparkles, Navigation, Trash2, Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAdmin } from "@/lib/admin-context";
 import { sendPushNotification } from "@/lib/push-notifications";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -33,6 +33,10 @@ export function OurMap() {
         description: "",
         category: "Date",
     });
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [showSearchResults, setShowSearchResults] = useState(false);
 
     useEffect(() => {
         fetchPlaces();
@@ -112,6 +116,53 @@ export function OurMap() {
         }
     };
 
+    const handleSearch = async () => {
+        if (!searchQuery.trim()) return;
+        setIsSearching(true);
+        try {
+            const res = await fetch(
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=5&addressdetails=1`,
+                { headers: { "Accept-Language": "id,en" } }
+            );
+            const data = await res.json();
+            setSearchResults(data);
+            setShowSearchResults(true);
+        } catch (error) {
+            console.error("Search error:", error);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            handleSearch();
+        }
+    };
+
+    // Component to fly map to a location
+    function FlyToLocation({ lat, lng }: { lat: number; lng: number }) {
+        const map = useMap();
+        useEffect(() => {
+            map.flyTo([lat, lng], 16, { duration: 1.5 });
+        }, [lat, lng, map]);
+        return null;
+    }
+
+    const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null);
+
+    const handleSelectSearchResult = (result: { display_name: string; lat: string; lon: string }) => {
+        const lat = parseFloat(result.lat);
+        const lng = parseFloat(result.lon);
+        setFlyTarget([lat, lng]);
+        setClickLocation([lat, lng]);
+        setIsAdding(true);
+        setNewPlace(prev => ({ ...prev, name: result.display_name.split(",")[0] }));
+        setShowSearchResults(false);
+        setSearchQuery("");
+    };
+
     function LocationMarker() {
         useMapEvents({
             click(e) {
@@ -142,6 +193,79 @@ export function OurMap() {
                 <p className="text-[9px] sm:text-[10px] uppercase tracking-widest hidden sm:block" style={{ color: 'var(--text-muted)' }}>Click anywhere to pin a memory</p>
             </div>
 
+            {/* Search Bar */}
+            <div className="relative z-20 mb-4">
+                <div className="flex gap-2">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+                        <input
+                            type="text"
+                            placeholder="Cari tempat..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={handleSearchKeyDown}
+                            className="w-full pl-11 pr-4 py-3 rounded-xl text-sm outline-none transition-colors"
+                            style={{ backgroundColor: 'var(--input-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                        />
+                    </div>
+                    <button
+                        onClick={handleSearch}
+                        disabled={isSearching || !searchQuery.trim()}
+                        className="px-4 py-3 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 flex items-center gap-2"
+                        style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+                    >
+                        {isSearching ? <Sparkles className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                    </button>
+                </div>
+
+                {/* Search Results Dropdown */}
+                <AnimatePresence>
+                    {showSearchResults && searchResults.length > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -5 }}
+                            className="absolute top-full left-0 right-0 mt-2 rounded-xl overflow-hidden shadow-xl border z-50"
+                            style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}
+                        >
+                            {searchResults.map((result, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => handleSelectSearchResult(result)}
+                                    className="w-full text-left px-4 py-3 flex items-start gap-3 transition-colors border-b last:border-b-0"
+                                    style={{ borderColor: 'var(--border)' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--input-bg)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                >
+                                    <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--accent)' }} />
+                                    <span className="text-xs leading-relaxed line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
+                                        {result.display_name}
+                                    </span>
+                                </button>
+                            ))}
+                            <button
+                                onClick={() => setShowSearchResults(false)}
+                                className="w-full text-center py-2 text-[10px] uppercase tracking-widest transition-colors"
+                                style={{ color: 'var(--text-faint)', backgroundColor: 'var(--input-bg)' }}
+                            >
+                                Tutup
+                            </button>
+                        </motion.div>
+                    )}
+                    {showSearchResults && searchResults.length === 0 && !isSearching && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -5 }}
+                            className="absolute top-full left-0 right-0 mt-2 rounded-xl p-4 text-center shadow-xl border"
+                            style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}
+                        >
+                            <p className="text-xs font-serif italic" style={{ color: 'var(--text-muted)' }}>Tempat tidak ditemukan</p>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+
             <div className="h-[350px] sm:h-[450px] md:h-[600px] w-full glass rounded-[1.5rem] sm:rounded-[3rem] overflow-hidden relative z-10">
                 <MapContainer
                     center={[-6.2088, 106.8456]}
@@ -155,6 +279,8 @@ export function OurMap() {
                     />
 
                     <LocationMarker />
+
+                    {flyTarget && <FlyToLocation lat={flyTarget[0]} lng={flyTarget[1]} />}
 
                     {places.map((place) => (
                         <Marker
@@ -189,8 +315,13 @@ export function OurMap() {
                 </MapContainer>
 
                 {loading && (
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
-                        <Sparkles className="w-8 h-8 text-white animate-pulse" />
+                    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center" style={{ backgroundColor: 'var(--glass-bg)' }}>
+                        <div className="animate-pulse space-y-4 w-full max-w-xs text-center">
+                            <MapPin className="w-10 h-10 mx-auto mb-2" style={{ color: 'var(--text-faint)' }} />
+                            <div className="h-3 w-2/3 mx-auto rounded" style={{ backgroundColor: 'var(--input-bg)' }} />
+                            <div className="h-2 w-1/2 mx-auto rounded" style={{ backgroundColor: 'var(--input-bg)' }} />
+                            <p className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--text-faint)' }}>Loading places...</p>
+                        </div>
                     </div>
                 )}
             </div>
