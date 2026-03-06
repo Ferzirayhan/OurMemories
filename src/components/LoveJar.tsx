@@ -267,9 +267,9 @@ export function LoveJar() {
                             <div className="relative z-10">
                                 <button
                                     onClick={() => setIsOpen(false)}
-                                    className="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-black/10 flex items-center justify-center hover:bg-black/20 transition-colors"
+                                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-black/10 flex items-center justify-center hover:bg-black/20 transition-colors"
                                 >
-                                    <X className="w-5 h-5 text-black/60" />
+                                    <X className="w-3 h-3 text-black/60" />
                                 </button>
 
                                 <Heart className="w-12 h-12 text-black/20 mx-auto mb-10" fill="currentColor" />
