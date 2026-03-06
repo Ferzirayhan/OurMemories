@@ -21,8 +21,7 @@ export function NotificationSetup() {
 
         setPermission(Notification.permission);
 
-        // If already granted, silently re-register with current authorName
-        // This ensures when Ezi logs in via PIN, subscription updates from "Ratih" to "Ezi"
+        // If already granted, silently register
         if (Notification.permission === "granted") {
             registerAndSubscribe(authorName).then((ok) => {
                 if (ok) setSubscribed(true);
