@@ -51,10 +51,13 @@ export function FutureLetters() {
     };
 
     const handleOpenLetter = async (letter: FutureLetter) => {
-        if (isLocked(letter.unlock_date)) return;
+        const locked = isLocked(letter.unlock_date);
 
-        // Mark as opened in DB if not already
-        if (!letter.is_opened) {
+        // Only Ratih is blocked by lock
+        if (locked && !isAdmin) return;
+
+        // Mark as opened in DB only if date has passed and not already opened
+        if (!locked && !letter.is_opened) {
             await supabase
                 .from('future_letters')
                 .update({ is_opened: true })
@@ -211,11 +214,13 @@ export function FutureLetters() {
                                     key={letter.id}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="p-5 sm:p-6 rounded-2xl border transition-all relative overflow-hidden group"
+                                    whileHover={isAdmin ? { y: -3 } : {}}
+                                    onClick={() => isAdmin && handleOpenLetter(letter)}
+                                    className={`p-5 sm:p-6 rounded-2xl border transition-all relative overflow-hidden group ${isAdmin ? 'cursor-pointer' : ''}`}
                                     style={{
                                         backgroundColor: 'var(--input-bg)',
                                         borderColor: 'var(--border)',
-                                        opacity: 0.6,
+                                        opacity: isAdmin ? 0.8 : 0.6,
                                     }}
                                 >
                                     <div className="flex items-start gap-4">
