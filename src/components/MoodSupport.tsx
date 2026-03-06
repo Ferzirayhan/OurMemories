@@ -320,7 +320,7 @@ export function MoodSupport() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="mt-8"
+                            className="mt-8 space-y-6"
                         >
                             <div className="glass p-6 sm:p-8 rounded-2xl sm:rounded-3xl relative overflow-hidden group">
                                 <Sparkles className="absolute top-4 right-4 w-4 h-4 transition-colors" style={{ color: "var(--accent)" }} />
@@ -329,12 +329,61 @@ export function MoodSupport() {
                                     {moodLetter.content}
                                 </p>
                             </div>
+
+                            {/* Voice note player for Ratih — only on Sad/Tired */}
+                            {!isAdmin && (currentMood === "Sad" || currentMood === "Tired") && voiceNotes.length > 0 && (
+                                <div className="glass rounded-2xl sm:rounded-3xl p-5 sm:p-6 relative overflow-hidden">
+                                    <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to right, var(--accent-soft), transparent)" }} />
+                                    <div className="relative z-10">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <Volume2 className="w-3 h-3" style={{ color: "var(--text-muted)" }} />
+                                            <span className="text-[10px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>A voice from Ezi</span>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {voiceNotes.map((note) => {
+                                                const isNotePlaying = playingId === note.id;
+                                                return (
+                                                    <div key={note.id} className="flex items-center gap-3">
+                                                        <button
+                                                            onClick={() => playNote(note)}
+                                                            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 hover:scale-110 active:scale-95 transition-transform"
+                                                            style={{
+                                                                backgroundColor: isNotePlaying ? "var(--accent)" : "var(--input-bg)",
+                                                                color: isNotePlaying ? "#fff" : "var(--text-muted)",
+                                                            }}
+                                                        >
+                                                            {isNotePlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+                                                        </button>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>{note.title}</p>
+                                                            <span className="text-[10px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{note.date}</span>
+                                                        </div>
+                                                        {isNotePlaying && (
+                                                            <div className="flex items-end gap-[2px] h-4">
+                                                                {[...Array(4)].map((_, i) => (
+                                                                    <motion.div
+                                                                        key={i}
+                                                                        animate={{ height: ["30%", "100%", "50%"] }}
+                                                                        transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                                                                        className="w-[3px] rounded-full"
+                                                                        style={{ backgroundColor: "var(--accent)" }}
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>
 
-                {/* ===== VOICE MESSAGES SECTION ===== */}
-                <div className="mt-8 pt-6" style={{ borderTop: "1px solid var(--border)" }}>
+                {/* ===== VOICE MESSAGES SECTION — Admin only ===== */}
+                {isAdmin && (<div className="mt-8 pt-6" style={{ borderTop: "1px solid var(--border)" }}>
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                             <Mic className="w-4 h-4" style={{ color: "var(--accent)" }} />
@@ -436,7 +485,7 @@ export function MoodSupport() {
                             })}
                         </div>
                     )}
-                </div>
+                </div>)}
             </motion.div>
 
             {/* ===== RECORD MODAL — Admin only ===== */}
