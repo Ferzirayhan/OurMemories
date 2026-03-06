@@ -2,45 +2,13 @@
 
 import { motion } from "framer-motion";
 import { Play, Pause, Disc3, SkipForward, SkipBack } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
-import { MOCK_PLAYLIST } from "@/lib/mock-data";
+import { useAudio } from "@/lib/audio-context";
 
 export function Mixtape() {
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [currentSongIndex, setCurrentSongIndex] = useState(0);
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-
-    const currentSong = MOCK_PLAYLIST[currentSongIndex];
-
-    useEffect(() => {
-        if (audioRef.current) {
-            if (isPlaying) {
-                audioRef.current.play().catch(err => console.error("Playback failed:", err));
-            } else {
-                audioRef.current.pause();
-            }
-        }
-    }, [isPlaying, currentSongIndex]);
-
-    const togglePlay = () => setIsPlaying(!isPlaying);
-
-    const nextSong = () => {
-        setCurrentSongIndex((prev) => (prev + 1) % MOCK_PLAYLIST.length);
-    };
-    const prevSong = () => {
-        setCurrentSongIndex((prev) => (prev - 1 + MOCK_PLAYLIST.length) % MOCK_PLAYLIST.length);
-    };
+    const { isPlaying, currentSong, togglePlay, nextSong, prevSong } = useAudio();
 
     return (
         <div className="w-full glass rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-hidden group">
-            {/* Audio Element */}
-            {currentSong.audioUrl && (
-                <audio
-                    ref={audioRef}
-                    src={currentSong.audioUrl}
-                    onEnded={() => nextSong()}
-                />
-            )}
             <div className="text-center mb-6">
                 <h3 className="text-xl font-light tracking-widest uppercase mb-1" style={{ color: 'var(--text-secondary)' }}>Our Playlist</h3>
                 <p className="font-serif italic text-xs" style={{ color: 'var(--text-muted)' }}>Songs that sound like you.</p>

@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navigation } from "@/components/Navigation";
 import { AdminProvider } from "@/lib/admin-context";
 import { ThemeProvider } from "@/lib/theme-context";
+import { AudioProvider } from "@/lib/audio-context";
 import { AdminLock } from "@/components/AdminLock";
 import { NotificationSetup } from "@/components/NotificationSetup";
 
@@ -49,10 +50,12 @@ export default function RootLayout({
       >
         <AdminProvider>
           <ThemeProvider>
-            <Navigation />
-            {children}
-            <AdminLock />
-            <NotificationSetup />
+            <AudioProvider>
+              <Navigation />
+              {children}
+              <AdminLock />
+              <NotificationSetup />
+            </AudioProvider>
           </ThemeProvider>
         </AdminProvider>
       </body>
