@@ -19,10 +19,10 @@ export default function SecretSpace() {
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 sm:py-12"
+                className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 sm:py-12 pt-20 sm:pt-24"
             >
                 {/* Header */}
-                <header className="flex flex-col items-center text-center mb-12 sm:mb-24 pt-12 sm:pt-0">
+                <header className="flex flex-col items-center text-center mb-12 sm:mb-24">
                     <motion.div
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
