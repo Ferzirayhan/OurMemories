@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Smile, Meh, BatteryWarning, Frown, Heart, Sparkles,
@@ -594,7 +595,8 @@ export function MoodSupport() {
             </AnimatePresence>
         </div>
 
-            {/* ===== RECORD MODAL — Rendered outside glass container to avoid overflow clip ===== */}
+            {/* ===== RECORD MODAL — Portal to document.body to escape sticky stacking context ===== */}
+            {typeof document !== 'undefined' && createPortal(
             <AnimatePresence>
                 {showRecordModal && (
                     <motion.div
@@ -606,7 +608,7 @@ export function MoodSupport() {
                             if (Date.now() - modalOpenedAt.current < 400) return;
                             if (e.target === e.currentTarget) cancelRecording();
                         }}
-                        className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 backdrop-blur-2xl"
+                        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 backdrop-blur-2xl"
                         style={{ backgroundColor: "rgba(0,0,0,0.85)" }}
                     >
                         <motion.div
@@ -760,7 +762,9 @@ export function MoodSupport() {
                         </motion.div>
                     </motion.div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence>,
+            document.body
+            )}
         </>
     );
 }
