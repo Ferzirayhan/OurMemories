@@ -2,6 +2,8 @@
 
 Panduan lengkap untuk mengedit, mengganti konten, dan mengelola project **Our Memories**.
 
+🌐 **Live URL:** https://our-memories-beta.vercel.app/
+
 ---
 
 ## 📁 Struktur Project
@@ -9,36 +11,46 @@ Panduan lengkap untuk mengedit, mengganti konten, dan mengelola project **Our Me
 ```
 src/
 ├── app/
-│   ├── globals.css          ← Warna tema (dark/light)
-│   ├── layout.tsx           ← Judul tab browser, metadata
-│   ├── page.tsx             ← Halaman utama (Home)
-│   ├── memories/page.tsx    ← Halaman gallery foto
-│   └── secret-space/page.tsx← Halaman rahasia
+│   ├── globals.css              ← Warna tema (dark/light)
+│   ├── layout.tsx               ← Judul tab, metadata, providers
+│   ├── page.tsx                 ← Halaman utama (Home)
+│   ├── memories/page.tsx        ← Halaman gallery foto
+│   ├── secret-space/page.tsx    ← Halaman rahasia
+│   └── api/push/
+│       ├── send/route.ts        ← API kirim push notification
+│       └── subscribe/route.ts   ← API simpan subscription
 ├── components/
-│   ├── Navigation.tsx       ← Menu bar atas
-│   ├── AdminLock.tsx        ← Tombol PIN admin
-│   ├── TimeCapsule.tsx      ← Hitung waktu sejak ketemu
-│   ├── MoodSupport.tsx      ← Mood picker + surat mood
-│   ├── Mixtape.tsx          ← Playlist lagu
-│   ├── Notebook.tsx         ← Daily diary
-│   ├── BucketList.tsx       ← Bucket list berdua
-│   ├── LoveJar.tsx          ← Jar berisi alasan cinta
-│   ├── FutureLetters.tsx    ← Surat masa depan
-│   ├── OurMap.tsx           ← Peta tempat kenangan
-│   ├── MilestoneTimeline.tsx← Timeline milestone
-│   ├── MemoryTimeline.tsx   ← Timeline foto gallery
-│   └── MemoryUpload.tsx     ← Form upload foto
+│   ├── Navigation.tsx           ← Menu bar atas (auto-hide saat scroll)
+│   ├── AdminLock.tsx            ← Tombol PIN admin
+│   ├── NotificationSetup.tsx    ← Popup aktifkan push notification
+│   ├── TimeCapsule.tsx          ← Hitung waktu sejak ketemu
+│   ├── DailyMemory.tsx          ← 🆕 Random memory harian
+│   ├── MoodSupport.tsx          ← Mood picker + surat mood + voice recorder
+│   ├── Mixtape.tsx              ← Playlist lagu (persistent across pages)
+│   ├── Notebook.tsx             ← Daily diary
+│   ├── BucketList.tsx           ← Bucket list berdua
+│   ├── LoveJar.tsx              ← Jar berisi alasan cinta (admin-only write)
+│   ├── GratitudeWall.tsx        ← 🆕 Dinding rasa syukur
+│   ├── FutureLetters.tsx        ← Surat masa depan (date-locked)
+│   ├── OurMap.tsx               ← Peta tempat kenangan
+│   ├── GrowthGarden.tsx         ← Growth garden
+│   ├── MilestoneTimeline.tsx    ← Timeline milestone
+│   ├── MemoryTimeline.tsx       ← Timeline foto gallery (polaroid style)
+│   └── MemoryUpload.tsx         ← Form upload foto
 ├── lib/
-│   ├── admin-context.tsx    ← PIN admin & nama author
-│   ├── theme-context.tsx    ← Dark/light mode
-│   ├── supabase.ts          ← Koneksi database
-│   └── mock-data.ts         ← Data playlist & fallback
+│   ├── admin-context.tsx        ← PIN admin & nama author
+│   ├── theme-context.tsx        ← Dark/light mode (default: Light)
+│   ├── audio-context.tsx        ← 🆕 Persistent audio playback
+│   ├── push-notifications.ts   ← 🆕 Helper push notification
+│   ├── supabase.ts              ← Koneksi database
+│   └── mock-data.ts             ← Data playlist & fallback
 public/
-├── audio/                   ← File lagu MP3
-├── logo.png                 ← Logo di navbar
-├── icon.png                 ← Icon app
-├── favicon.ico              ← Icon tab browser
-└── manifest.json            ← PWA manifest
+├── sw.js                        ← 🆕 Service Worker untuk push notif
+├── manifest.json                ← PWA manifest
+├── audio/                       ← File lagu MP3
+├── logo.png                     ← Logo di navbar
+├── icon.png                     ← Icon app
+└── favicon.ico                  ← Icon tab browser
 ```
 
 ---
@@ -58,8 +70,8 @@ const ADMIN_PIN = "230898";
 // Baris 48 — nama yang muncul saat nulis catatan/upload
 const authorName = isAdmin ? "Ezi" : "Ratih";
 ```
-- **"Ezi"** → nama yang muncul kalau login admin
-- **"Ratih"** → nama yang muncul kalau tidak login (user biasa)
+- **"Ezi"** → nama yang muncul kalau login admin (unlock 🔓)
+- **"Ratih"** → nama yang muncul kalau tidak login (lock 🔒)
 
 ---
 
@@ -67,30 +79,26 @@ const authorName = isAdmin ? "Ezi" : "Ratih";
 
 **File:** `src/app/globals.css`
 
-### Dark Mode (Default)
+### Light Mode (Default)
 ```css
-/* Baris 31-57 */
-:root, .dark {
-  --background: #121110;      /* Warna latar belakang */
-  --accent: #d4a574;           /* Warna aksen utama (coklat caramel) */
-  --accent-soft: rgba(212,165,116,0.15); /* Glow aksen */
-  --text-primary: #f5f2ed;     /* Teks utama */
-  --text-secondary: #a1a1aa;   /* Teks sub */
-  --text-muted: #71717a;       /* Teks redup */
-  --nav-bg: rgba(0,0,0,0.4);   /* Background navbar */
-  /* ... dll */
+:root {
+  --background: #faf8f5;                    /* Krem hangat */
+  --accent: #a06b3e;                         /* Coklat earthy gold */
+  --accent-soft: rgba(160,107,62,0.12);      /* Glow aksen */
+  --text-primary: #1a1816;                   /* Teks utama */
+  --text-secondary: #57534e;                 /* Teks sub */
+  --text-muted: #71717a;                     /* Teks redup */
+  --nav-bg: rgba(255,255,255,0.85);          /* Background navbar */
 }
 ```
 
-### Light Mode
+### Dark Mode
 ```css
-/* Baris 60-82 */
-.light {
-  --background: #faf8f5;      /* Warna latar (krem hangat) */
-  --accent: #c4875a;           /* Warna aksen (coklat gelap) */
-  --text-primary: #1a1816;     /* Teks utama */
-  --nav-bg: rgba(255,255,255,0.75); /* Background navbar */
-  /* ... dll */
+.dark {
+  --background: #121110;                     /* Gelap */
+  --accent: #d4a574;                         /* Coklat caramel */
+  --text-primary: #f5f2ed;                   /* Teks terang */
+  --nav-bg: rgba(0,0,0,0.4);                /* Background navbar */
 }
 ```
 
@@ -99,6 +107,13 @@ Cukup ganti value hex/rgba di file CSS. Contoh ganti aksen jadi pink:
 ```css
 --accent: #e91e63;
 --accent-soft: rgba(233,30,99,0.15);
+```
+
+### Cara Ganti Default Theme
+**File:** `src/lib/theme-context.tsx`
+```tsx
+// Ganti "light" ke "dark" untuk default gelap
+const [theme, setTheme] = useState<"light" | "dark">("light");
 ```
 
 ---
@@ -120,81 +135,92 @@ Cukup ganti value hex/rgba di file CSS. Contoh ganti aksen jadi pink:
 
 ---
 
-## 😊 4. Mood Support (Surat Mood)
+## 📸 4. Daily Memory (Random Kenangan Harian)
+
+**File:** `src/components/DailyMemory.tsx`
+
+Fitur yang menampilkan **1 kenangan random setiap hari** di halaman Home.
+
+### Cara Kerja
+- Mengambil semua foto dari tabel `memories`
+- Menggunakan date-based seed → setiap hari foto yang tampil berbeda
+- Ditampilkan dalam **polaroid frame** dengan judul & deskripsi
+- Klik → navigasi ke halaman Memories
+
+### Teks yang bisa diganti
+```tsx
+<h3>Today&apos;s Memory ✨</h3>        // ← Judul section
+<p>What the stars chose for today</p>  // ← Subtitle
+<span>See all memories →</span>        // ← Teks link
+```
+
+Tidak perlu input data — otomatis ambil dari foto yang sudah di-upload.
+
+---
+
+## 😊 5. Mood Support (Surat Mood + Voice Recorder)
 
 **File:** `src/components/MoodSupport.tsx`
 
-### Teks Sapaan (Baris 96-98)
+### Teks Sapaan
 ```tsx
-<h2>Hi, Ratih.</h2>               // ← Ganti nama
-<p>How is your heart feeling today?</p>  // ← Ganti pertanyaan
+<h2>Hi, Ratih.</h2>                          // ← Ganti nama
+<p>How is your heart feeling today?</p>      // ← Ganti pertanyaan
 ```
 
-### Teks Virtual Hug (Baris 185)
-```tsx
-<p>Sending a virtual hug...</p>    // ← Ganti teks pelukan
-```
-
-### Teks Audio Support (Baris 155)
-```tsx
-<p>A message for your heart</p>    // ← Ganti judul audio
-```
-
-### Fallback Surat Mood (Baris 51-56)
+### Fallback Surat Mood
 Kalau di database kosong, surat ini yang muncul:
 ```tsx
 const fallbacks = {
-  'Happy': { title: 'Yay!', content: 'I am so happy that you...' },
-  'Neutral': { title: 'Thinking of You', content: 'Just a regular day...' },
-  'Tired': { title: 'Rest Up, Love', content: 'You have worked so hard...' },
-  'Sad': { title: 'I am Right Here', content: 'I wish I could be there...' }
+  'Happy': { title: 'Yay!', content: '...' },
+  'Neutral': { title: 'Thinking of You', content: '...' },
+  'Tired': { title: 'Rest Up, Love', content: '...' },
+  'Sad': { title: 'I am Right Here', content: '...' }
 };
 ```
 
-### ✅ Via Supabase (Tanpa Ngoding!)
-Cara paling gampang — bisa ganti kapan aja tanpa deploy ulang:
+### ✅ Edit Surat via Supabase (Tanpa Ngoding!)
 1. Buka **Supabase Dashboard** → **Table Editor** → tabel **`mood_letters`**
 2. Insert/edit row:
 
 | Kolom | Isi |
 |-------|-----|
 | `mood` | `Happy` / `Neutral` / `Tired` / `Sad` |
-| `title` | Judul surat, misal: `"Senangnyaa!"` |
+| `title` | Judul surat |
 | `content` | Isi surat panjang |
+
+### 🎙️ Voice Recorder (Admin Only)
+- Hanya muncul saat **admin unlock** (Ezi)
+- Bisa rekam suara langsung dari HP/browser
+- Pilih kategori: Happy / Neutral / Tired / Sad
+- Voice note disimpan di **Supabase Storage** bucket `voice-notes`
+- Satu voice note per kategori (hapus dulu kalau mau ganti)
+- Ratih bisa **mendengarkan** voice note saat pilih mood
 
 ---
 
-## 🎵 5. Playlist (Mixtape)
+## 🎵 6. Playlist (Mixtape) — Persistent Playback
 
-**File:** `src/lib/mock-data.ts` — Baris 57-87
+**File:** `src/lib/mock-data.ts`
+
+Musik sekarang **tidak berhenti saat pindah halaman**! Audio dikelola oleh `AudioProvider` di `src/lib/audio-context.tsx`.
 
 ```tsx
 export const MOCK_PLAYLIST: Song[] = [
   {
     id: '1',
-    title: 'Soft',                    // ← Judul lagu
-    artist: 'LANY',                   // ← Nama artis
-    duration: '3:13',                 // ← Durasi
-    memoryText: '"This song the definition of u hehehe"',  // ← Cerita tentang lagu
-    audioUrl: '/audio/LANY - Soft.mp3'  // ← Path file audio
+    title: 'Soft',                              // ← Judul lagu
+    artist: 'LANY',                              // ← Nama artis
+    duration: '3:13',                            // ← Durasi
+    memoryText: '"This song..."',                // ← Cerita tentang lagu
+    audioUrl: '/audio/LANY - Soft.mp3'           // ← Path file audio
   },
-  // ... tambah lagu lain di sini
 ];
 ```
 
 ### Cara Tambah Lagu Baru
 1. Taruh file `.mp3` di folder `public/audio/`
-2. Tambah entry baru di array `MOCK_PLAYLIST`:
-```tsx
-{
-  id: '4',
-  title: 'Judul Lagu',
-  artist: 'Nama Artis',
-  duration: '3:45',
-  memoryText: '"Kenangan tentang lagu ini..."',
-  audioUrl: '/audio/nama-file.mp3'
-}
-```
+2. Tambah entry baru di array `MOCK_PLAYLIST`
 
 ### Cara Hapus Lagu
 Hapus entry dari array dan hapus file mp3 dari `public/audio/`.
@@ -204,76 +230,88 @@ Letakkan file di `public/audio/support.mp3` — akan diputar saat Ratih pilih mo
 
 ---
 
-## ✍️ 6. Daily Notebook
+## ✍️ 7. Daily Notebook
 
 Konten notebook disimpan di **Supabase** tabel **`notes`**.
 
 - Bisa ditulis & dihapus oleh **semua orang** (Ezi & Ratih)
 - Setiap catatan otomatis punya nama author
 - Realtime — langsung muncul tanpa refresh
-
-Tidak ada yang perlu diedit di kode. Semua lewat UI app.
+- **Push notification** dikirim saat ada catatan baru
 
 ---
 
-## ✅ 7. Bucket List
+## ✅ 8. Bucket List
 
 Konten bucket list disimpan di **Supabase** tabel **`bucket_list`**.
 
 - Bisa ditambah, di-checklist, dan dihapus oleh **semua orang**
-- Semua lewat UI app — tidak perlu edit kode
+- **Push notification** dikirim saat item baru ditambah
+- Semua lewat UI app
 
 ---
 
-## 💌 8. Love Jar
+## 💌 9. Love Jar (Admin-Only Write)
 
 Konten love jar disimpan di **Supabase** tabel **`love_reasons`**.
 
-### Warna Kertas (Pilihan di UI)
-**File:** `src/components/LoveJar.tsx` — Baris 18-23
+### ⚠️ Perubahan Penting
+- **Hanya admin (Ezi) yang bisa menulis** Love Note baru
+- Ratih **hanya bisa membaca** — sebagai surprise 💕
+- Hapus note tetap admin-only
 
+### Warna Kertas
+**File:** `src/components/LoveJar.tsx`
 ```tsx
 const COLORS = [
-  { name: "Rose", value: "#FDA4AF" },      // Pink
-  { name: "Cream", value: "#FEF9C3" },     // Kuning krem
-  { name: "Sky", value: "#BAE6FD" },        // Biru langit
-  { name: "Lavender", value: "#E9D5FF" },   // Ungu muda
-  { name: "Mint", value: "#BBF7D0" },       // Hijau mint
+  { name: "Rose", value: "#FDA4AF" },
+  { name: "Cream", value: "#FEF9C3" },
+  { name: "Sky", value: "#BAE6FD" },
+  { name: "Lavender", value: "#E9D5FF" },
+  { name: "Mint", value: "#BBF7D0" },
 ];
 ```
 
-### Cara Ganti/Tambah Warna
-Tambah entry baru di array `COLORS`:
-```tsx
-{ name: "Coral", value: "#FCA5A5" },
-```
+---
 
-### Operasi via UI
-- **Tambah note**: Tombol "Write Note" di pojok kanan atas jar
-- **Baca note**: Klik kertas kecil di dalam jar
-- **Hapus note**: Hover kertas → tombol X (hanya admin)
+## 🌸 10. Gratitude Wall (Dinding Syukur)
+
+**File:** `src/components/GratitudeWall.tsx`
+
+Fitur di **Secret Space** — dinding tempat Ezi & Ratih menulis hal-hal yang mereka syukuri.
+
+### Cara Kerja
+- **Kedua orang bisa menulis** (Ezi & Ratih)
+- Setiap note menampilkan nama author + tanggal
+- Hapus note hanya bisa admin
+- Realtime — muncul otomatis saat partner nulis
+- **Push notification** dikirim saat ada note baru
+- Warna gradient berbeda untuk setiap note
+
+### Tabel Supabase: `gratitude_wall`
+| Kolom | Tipe |
+|-------|------|
+| `id` | UUID |
+| `message` | TEXT |
+| `author` | TEXT |
+| `created_at` | TIMESTAMPTZ |
 
 ---
 
-## 💌 9. Future Letters (Surat Masa Depan)
+## ✉️ 11. Future Letters (Surat Masa Depan)
 
 Konten disimpan di **Supabase** tabel **`future_letters`**.
 
 ### Operasi via UI
-- **Tulis surat baru**: Tombol "Write Letter"
+- **Tulis surat baru**: Tombol "Write Letter" — pilih tanggal unlock
 - **Baca surat**: Klik surat yang sudah unlock (tanggal sudah lewat)
 - **Hapus surat**: Tombol trash (hanya admin)
 - Surat yang **belum unlock** ditampilkan abu-abu + countdown
-
-### Teks Header
-**File:** `src/components/FutureLetters.tsx` — Baris 97
-```tsx
-<h2>Future Letters</h2>  // ← Judul section
-```
+- **Push notification** dikirim saat surat baru ditulis
 
 ---
 
-## 🗺 10. Our Map (Peta Kenangan)
+## 🗺 12. Our Map (Peta Kenangan)
 
 Konten disimpan di **Supabase** tabel **`memorable_places`**.
 
@@ -281,186 +319,179 @@ Konten disimpan di **Supabase** tabel **`memorable_places`**.
 1. **Klik di peta** → muncul form "Pin this Memory"
 2. Isi nama tempat, cerita, dan kategori
 3. **Hapus pin**: Klik marker → popup → tombol trash (hanya admin)
+4. **Push notification** dikirim saat pin baru ditambah
 
-### Kategori Tempat (bisa ditambah)
-**File:** `src/components/OurMap.tsx` — Baris 262-267
+### Kategori Tempat
 ```tsx
-<select>
-  <option value="Date">Date</option>
-  <option value="First Meet">First Meet</option>
-  <option value="Special Moment">Special Moment</option>
-  <option value="Travel">Travel</option>
-</select>
+<option value="Date">Date</option>
+<option value="First Meet">First Meet</option>
+<option value="Special Moment">Special Moment</option>
+<option value="Travel">Travel</option>
 ```
 Tambah `<option>` baru kalau mau kategori lain.
 
 ### Ganti Posisi Default Peta
-**File:** `src/components/OurMap.tsx` — Baris 155
 ```tsx
 center={[-6.2088, 106.8456]}  // ← Koordinat Jakarta
 zoom={11}                      // ← Level zoom (1-18)
 ```
-Ganti koordinat ke kota kalian. Cari di Google Maps → klik kanan → "Copy coordinates".
 
 ---
 
-## 🏆 11. Milestones (Timeline Momen Penting)
+## 🏆 13. Milestones (Timeline Momen Penting)
 
 Konten disimpan di **Supabase** tabel **`milestones`**.
 
 ### Icon yang Tersedia
-**File:** `src/components/MilestoneTimeline.tsx` — Baris 20
-```tsx
-const AVAILABLE_ICONS = [
-  "Heart",          // ❤️
-  "Star",           // ⭐
-  "Camera",         // 📷
-  "Coffee",         // ☕
-  "MapPin",         // 📍
-  "MessageCircle",  // 💬
-  "Eye"             // 👁
-];
+```
+Heart ❤️, Star ⭐, Camera 📷, Coffee ☕, MapPin 📍, MessageCircle 💬, Eye 👁
 ```
 
-### Cara Pakai di UI
 - **Tambah milestone**: Tombol "Add Milestone"
 - **Hapus milestone**: Tombol trash (hanya admin)
 
 ---
 
-## 📷 12. Memories Gallery
+## 📷 14. Memories Gallery (Polaroid Style)
 
-Konten (foto + deskripsi) disimpan di **Supabase** tabel **`memories`**.
-Foto disimpan di **Supabase Storage** bucket **`memories`**.
+Konten disimpan di **Supabase** tabel **`memories`** + Storage bucket **`memories`**.
 
 ### Cara Pakai di UI
-1. Buka halaman **Memories** (menu bar)
+1. Buka halaman **Memories**
 2. Klik **"Add New Memory"**
 3. Upload foto, isi judul, deskripsi, dan hidden message (curhatan)
-4. Hapus memory: klik tombol trash di card
-
-### Ganti Judul Halaman
-**File:** `src/app/memories/page.tsx` — Baris 92-94
-```tsx
-<h1>Our Gallery</h1>                           // ← Judul besar
-<p>Every frame is a story. Add yours...</p>    // ← Subtitle
-```
+4. Foto ditampilkan dalam **polaroid frame** putih dengan caption strip
+5. **Push notification** dikirim saat memory baru di-upload
 
 ---
 
-## 🧭 13. Navigasi & Branding
+## 🔔 15. Push Notifications (PWA)
+
+### Cara Kerja
+- Saat buka app pertama kali, muncul popup "Stay Connected 💕"
+- Klik **Enable Notifications** → izinkan di browser
+- Setiap kali ada konten baru (memory, note, gratitude, dll), **semua subscriber** dapat notifikasi
+- Notifikasi muncul bahkan saat app tidak dibuka
+
+### Fitur yang Kirim Notif
+| Fitur | Emoji | Contoh Notifikasi |
+|-------|-------|-------------------|
+| Upload Memory | 📸 | "Ezi added: Dinner Date" |
+| Love Jar | 💌 | "Ezi dropped a new note in the Love Jar" |
+| Gratitude Wall | 🌸 | "Ratih shared something they're grateful for" |
+| Bucket List | ✅ | "Ezi added: Visit Paris" |
+| Voice Message | 🎙️ | "Ezi recorded a voice note for you" |
+| Future Letter | ✉️ | "A new letter is waiting to be unlocked" |
+| Notebook | 📝 | "Ratih wrote something in the notebook" |
+| Map Pin | 📍 | "Ezi pinned: Cafe Kita" |
+
+### Troubleshooting Notif
+- **Notif tidak muncul?** Pastikan sudah klik "Enable" dan izinkan di browser
+- **iOS Safari**: Harus **Add to Home Screen** dulu, baru bisa push notif
+- **Android Chrome**: Langsung bisa tanpa install
+
+### Environment Variables untuk Push Notif
+```env
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=BDikc-ib78pth...
+VAPID_PRIVATE_KEY=9cLdaYBny3cb...
+```
+Kedua variable ini harus ada di `.env.local` (lokal) **dan** Vercel Dashboard (production).
+
+---
+
+## 🧭 16. Navigasi & Branding
 
 **File:** `src/components/Navigation.tsx`
 
+### Navbar Features
+- **Auto-hide** saat scroll ke bawah, muncul saat scroll ke atas
+- **Glass effect** dengan blur backdrop
+- Logo + nama app di kiri
+- Theme toggle (🌙/☀️) + admin lock di kanan
+
 ### Ganti Nama App di Navbar
 ```tsx
-// Baris 32 — tampil di desktop
-<span className="hidden sm:inline ...">OurMemories</span>
-
-// Baris 33 — tampil di mobile
-<span className="sm:hidden ...">OM</span>
+<span className="hidden sm:inline ...">OurMemories</span>  // Desktop
+<span className="sm:hidden ...">OM</span>                   // Mobile
 ```
 
 ### Ganti Logo
-Ganti file `public/logo.png` dengan gambar baru (disarankan kotak, min 100x100px).
-
-### Ganti Link Menu
-```tsx
-// Baris 14-17
-const links = [
-  { href: "/memories", label: "Memories" },
-  { href: "/secret-space", label: "Secret Space" }
-];
-```
+Ganti file `public/logo.png` (disarankan kotak, min 100x100px).
 
 ---
 
-## 🏠 14. Halaman Home
+## 🏠 17. Halaman Home
 
 **File:** `src/app/page.tsx`
 
-### Teks Secret Space Portal (Baris 65-75)
-```tsx
-<h2>The Secret Space</h2>
-<p>A private corner filled with small surprises...</p>
-<Link>Enter Our Hidden World</Link>   // ← Teks tombol
-```
+### Layout
+- **Kiri**: Daily Memory → Mood Support → Mixtape
+- **Kanan**: Notebook → Bucket List
+- **Bawah**: Portal ke Secret Space
 
 ---
 
-## 🔮 15. Halaman Secret Space
+## 🔮 18. Halaman Secret Space
 
 **File:** `src/app/secret-space/page.tsx`
 
-### Teks Header (Baris 50-58)
-```tsx
-<span>Go Back Home</span>                  // ← Teks tombol kembali
-<h1>The Secret Space</h1>                 // ← Judul halaman
-<p>
-  A private sanctuary for the little things that mean the most.
-  Just for you, Ratih.                     // ← Ganti nama
-</p>
-```
-
-### Teks Section Milestone (Baris 84)
-```tsx
-<h2>Our Secret Milestones</h2>
-```
-
-### Teks Footer (Baris 92)
-```tsx
-<p>Made with love & code</p>
-```
+### Komponen di Secret Space
+1. **Love Jar** (admin-only write)
+2. **Gratitude Wall** (kedua bisa tulis)
+3. **Future Letters** (date-locked)
+4. **Our Map** (peta interaktif)
+5. **Milestone Timeline**
 
 ---
 
-## 🌐 16. Metadata & SEO
+## 🌐 19. Metadata & SEO
 
-**File:** `src/app/layout.tsx` — Baris 20-28
+**File:** `src/app/layout.tsx`
 
 ```tsx
 export const metadata: Metadata = {
-  title: "Our Memories",                    // ← Judul tab browser
-  description: "A deeply personal space.",  // ← Deskripsi SEO
+  title: "Our Memories",
+  description: "A deeply personal space.",
 };
 ```
 
 ---
 
-## 📱 17. Icon & Manifest (PWA)
+## 📱 20. PWA & Manifest
 
-### Ganti Icon App
-Ganti file-file ini:
-- `public/icon.png` — Icon utama (min 512x512px, PNG)
-- `public/favicon.ico` — Icon tab browser
-
-### Manifest PWA
 **File:** `public/manifest.json`
 ```json
 {
-  "name": "Our Memories",           // ← Nama lengkap app
-  "short_name": "Our Memories",     // ← Nama pendek
-  "description": "Your personal space and memory timeline.",
-  "start_url": "/",                 // ← ⚠️ Ganti dari "/dashboard" ke "/"
-  "theme_color": "#121110",         // ← ⚠️ Ganti ke warna tema
-  "background_color": "#121110"     // ← ⚠️ Ganti ke warna background
+  "name": "Our Memories",
+  "short_name": "Our Memories",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#a06b3e",
+  "background_color": "#faf8f5"
 }
 ```
 
+### Cara Install sebagai App
+- **iOS**: Safari → Share → "Add to Home Screen"
+- **Android**: Chrome → Menu (⋮) → "Add to Home Screen"
+
 ---
 
-## 🗄 18. Database Supabase — Ringkasan Tabel
+## 🗄 21. Database Supabase — Ringkasan Tabel
 
-| Tabel | Isi | Bisa lewat UI? |
-|-------|-----|----------------|
-| `memories` | Foto gallery + deskripsi + curhatan | ✅ Upload & hapus di app |
-| `notes` | Catatan daily notebook | ✅ Tulis & hapus di app |
-| `love_reasons` | Kertas-kertas di Love Jar | ✅ Tambah & hapus di app |
-| `future_letters` | Surat masa depan (terkunci sampai tanggal) | ✅ Tulis & hapus di app |
-| `memorable_places` | Pin lokasi di peta | ✅ Klik peta & hapus di app |
-| `milestones` | Momen penting di timeline | ✅ Tambah & hapus di app |
-| `mood_letters` | Surat respons mood (Happy/Sad/dll) | ❌ Edit di Supabase Dashboard |
-| `bucket_list` | Daftar hal yang mau dilakukan berdua | ✅ Tambah, checklist & hapus di app |
+| Tabel | Isi | Bisa lewat UI? | Push Notif? |
+|-------|-----|----------------|-------------|
+| `memories` | Foto gallery + deskripsi + curhatan | ✅ Upload & hapus | ✅ |
+| `notes` | Catatan daily notebook | ✅ Tulis & hapus | ✅ |
+| `love_reasons` | Kertas di Love Jar | ✅ Tambah (admin) & hapus | ✅ |
+| `future_letters` | Surat masa depan (date-locked) | ✅ Tulis & hapus | ✅ |
+| `memorable_places` | Pin lokasi di peta | ✅ Klik peta & hapus | ✅ |
+| `milestones` | Momen penting di timeline | ✅ Tambah & hapus | ❌ |
+| `mood_letters` | Surat respons mood | ❌ Edit di Supabase | ❌ |
+| `bucket_list` | Hal yang mau dilakukan berdua | ✅ Tambah, checklist, hapus | ✅ |
+| `voice_notes` | Rekaman suara per mood | ✅ Rekam & hapus (admin) | ✅ |
+| `gratitude_wall` | Catatan rasa syukur | ✅ Tulis & hapus (admin) | ✅ |
+| `push_subscriptions` | Data subscriber notif | ❌ Otomatis | ❌ |
 
 ### Cara Edit Data Langsung di Supabase
 1. Buka https://supabase.com/dashboard
@@ -470,29 +501,31 @@ Ganti file-file ini:
 
 ---
 
-## 🔑 19. Environment Variables
+## 🔑 22. Environment Variables
 
 **File:** `.env.local` (JANGAN di-commit ke GitHub!)
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://nnifiqayjjlanfslkjck.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...panjang...
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=BDikc-ib78pth...
+VAPID_PRIVATE_KEY=9cLdaYBny3cb...
 ```
 
-Kalau deploy ke **Vercel**, tambahkan kedua variable ini di:
+**Di Vercel**, tambahkan **semua 4 variable** di:
 **Vercel Dashboard → Project → Settings → Environment Variables**
 
 ---
 
-## 🎯 20. Fitur Admin vs Non-Admin
+## 🎯 23. Fitur Admin vs Non-Admin
 
-| Fitur | Admin (PIN ✅) | Non-Admin |
-|-------|---------------|-----------|
+| Fitur | Admin / Ezi (PIN ✅) | Non-Admin / Ratih |
+|-------|---------------------|-------------------|
 | Upload memory | ✅ (author: "Ezi") | ✅ (author: "Ratih") |
 | Hapus memory | ✅ | ✅ |
 | Tulis notebook | ✅ | ✅ |
 | Hapus notebook | ✅ | ✅ |
-| Tambah love jar | ✅ | ✅ |
+| **Tambah love jar** | ✅ | ❌ **(admin only!)** |
 | Hapus love jar | ✅ | ❌ |
 | Tulis future letter | ✅ | ✅ |
 | Hapus future letter | ✅ | ❌ |
@@ -501,38 +534,50 @@ Kalau deploy ke **Vercel**, tambahkan kedua variable ini di:
 | Tambah milestone | ✅ | ✅ |
 | Hapus milestone | ✅ | ❌ |
 | Bucket list (semua) | ✅ | ✅ |
+| Tulis gratitude | ✅ | ✅ |
+| Hapus gratitude | ✅ | ❌ |
+| Rekam voice note | ✅ | ❌ |
+| Dengar voice note | ✅ | ✅ |
+| Theme toggle | ✅ | ✅ |
 
 ---
 
-## 🚀 21. Deploy ke Vercel
+## 🚀 24. Deploy ke Vercel
 
 1. Push ke GitHub (sudah di `https://github.com/Ferzirayhan/OurMemories.git`)
 2. Buka https://vercel.com → **Import Project** → pilih repo `OurMemories`
-3. Di **Environment Variables**, tambahkan:
+3. Di **Environment Variables**, tambahkan 4 variable:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
+   - `VAPID_PRIVATE_KEY`
 4. Klik **Deploy**
-5. Selesai! Dapat link `.vercel.app`
+5. Selesai! Live di: https://our-memories-beta.vercel.app/
+
+### Auto Deploy
+Setiap `git push` ke branch `main`, Vercel otomatis deploy ulang.
 
 ### Custom Domain (Opsional)
 Di Vercel Dashboard → **Settings → Domains** → tambahkan domain custom.
 
 ---
 
-## 📝 Checklist Sebelum Kasih ke Ratih
+## 📝 25. Checklist Sebelum Kasih ke Ratih
 
 - [ ] Ganti `startDate` di TimeCapsule ke tanggal yang benar
-- [ ] Ganti nama "Ezi" & "Ratih" di `admin-context.tsx` kalau perlu
 - [ ] Upload lagu-lagu yang meaningful ke `public/audio/`
-- [ ] Edit `MOCK_PLAYLIST` di `mock-data.ts` dengan lagu yang benar
+- [ ] Edit `MOCK_PLAYLIST` di `mock-data.ts`
 - [ ] Isi tabel `mood_letters` di Supabase dengan surat personal
+- [ ] Rekam voice notes untuk setiap mood (Happy/Neutral/Tired/Sad)
 - [ ] Upload foto-foto kenangan lewat UI app
+- [ ] Tulis beberapa love notes di Love Jar
+- [ ] Tulis gratitude notes di Gratitude Wall
 - [ ] Tambah milestone pertama lewat UI app
-- [ ] Pin tempat-tempat kenangan di peta lewat UI app
-- [ ] Tulis beberapa future letter dengan tanggal unlock
+- [ ] Pin tempat-tempat kenangan di peta
+- [ ] Tulis beberapa future letters dengan tanggal unlock
 - [ ] Ganti `public/logo.png` dan `public/icon.png`
-- [ ] Fix `manifest.json`: ganti `start_url` ke `/`, update `theme_color`
-- [ ] Deploy ke Vercel
+- [ ] Test push notification di HP
+- [ ] Deploy ke Vercel + set env variables
 - [ ] Test di HP (iPhone/Android)
 - [ ] Kirim link ke Ratih 💕
 
@@ -541,19 +586,47 @@ Di Vercel Dashboard → **Settings → Domains** → tambahkan domain custom.
 ## ❓ FAQ
 
 ### Q: Gimana kalau mau ganti font?
-**File:** `src/app/layout.tsx` — Baris 9-16. Import font baru dari `next/font/google` dan ganti variable-nya.
+**File:** `src/app/layout.tsx`. Import font baru dari `next/font/google` dan ganti variable-nya.
 
 ### Q: Gimana kalau mau tambah halaman baru?
 Buat folder baru di `src/app/nama-halaman/page.tsx` dan tambahkan link di `Navigation.tsx`.
 
 ### Q: Gimana kalau mau ganti audio support yang diputar saat Sad/Tired?
-Ganti file `public/audio/support.mp3` dengan file audio baru (harus nama sama, atau ganti path di `MoodSupport.tsx` baris 157).
+Ganti file `public/audio/support.mp3` dengan file audio baru.
 
 ### Q: Gimana akses Supabase Dashboard?
 Buka https://supabase.com/dashboard → login → pilih project **For-Ratih**.
 
 ### Q: Data bisa hilang nggak?
-Data aman di Supabase cloud. Selama project Supabase aktif (free tier berlaku 1 project aktif), data tetap aman.
+Data aman di Supabase cloud. Selama project Supabase aktif, data tetap aman.
 
 ### Q: Gimana reset PIN admin kalau lupa?
-Edit `ADMIN_PIN` di `src/lib/admin-context.tsx` baris 17, lalu deploy ulang.
+Edit `ADMIN_PIN` di `src/lib/admin-context.tsx`, lalu deploy ulang.
+
+### Q: Push notif tidak muncul?
+1. Pastikan sudah klik "Enable Notifications" di popup
+2. Di **iOS**: harus Add to Home Screen dulu
+3. Cek Settings browser → pastikan notifikasi diizinkan untuk site ini
+4. Cek Vercel env variables sudah lengkap (4 variable)
+
+### Q: Musik berhenti saat pindah halaman?
+Tidak lagi! Audio sekarang persistent — tetap main meskipun pindah halaman.
+
+### Q: Siapa yang dapat push notif?
+Semua orang yang sudah enable notification akan dapat notif, baik Ezi maupun Ratih.
+
+---
+
+## 🛠 Tech Stack
+
+| Teknologi | Versi | Kegunaan |
+|-----------|-------|----------|
+| Next.js | 16.1.6 | Framework React |
+| React | 19.2.3 | UI Library |
+| Supabase | - | Database + Storage + Realtime |
+| Tailwind CSS | v4 | Styling |
+| Framer Motion | 12.35 | Animasi |
+| Leaflet | - | Peta interaktif |
+| web-push | - | Push notifications |
+| Lucide React | - | Icons |
+| Vercel | - | Hosting & deployment |
