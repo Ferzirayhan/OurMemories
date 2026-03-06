@@ -51,8 +51,10 @@ export function MoodSupport() {
     const [showRecordModal, setShowRecordModal] = useState(false);
     const [noteTitle, setNoteTitle] = useState("");
     const [isUploading, setIsUploading] = useState(false);
+    const [recordError, setRecordError] = useState<string | null>(null);
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const streamRef = useRef<MediaStream | null>(null);
     const chunksRef = useRef<Blob[]>([]);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const modalOpenedAt = useRef<number>(0);
@@ -128,46 +130,83 @@ export function MoodSupport() {
 
     // ===== RECORDING =====
     const getSupportedMimeType = (): string | undefined => {
+        if (typeof MediaRecorder === "undefined") return undefined;
         const types = [
             "audio/webm;codecs=opus",
             "audio/webm",
             "audio/mp4",
+            "audio/aac",
             "audio/ogg;codecs=opus",
             "audio/ogg",
+            "",
         ];
-        if (typeof MediaRecorder !== "undefined" && typeof MediaRecorder.isTypeSupported === "function") {
-            for (const t of types) {
-                if (MediaRecorder.isTypeSupported(t)) return t;
-            }
+        for (const t of types) {
+            try {
+                if (t === "" || MediaRecorder.isTypeSupported(t)) return t || undefined;
+            } catch (_e) { /* skip */ }
         }
-        return undefined; // let browser pick default
+        return undefined;
     };
 
     const startRecording = async () => {
+        setRecordError(null);
+
+        // Check browser support
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            setRecordError("Browser tidak mendukung recording. Gunakan Chrome/Safari terbaru dan pastikan akses lewat HTTPS atau localhost.");
+            return;
+        }
+        if (typeof MediaRecorder === "undefined") {
+            setRecordError("MediaRecorder tidak tersedia di browser ini.");
+            return;
+        }
+
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            streamRef.current = stream;
 
             const mimeType = getSupportedMimeType();
             const options: MediaRecorderOptions = mimeType ? { mimeType } : {};
 
-            const mediaRecorder = new MediaRecorder(stream, options);
+            let mediaRecorder: MediaRecorder;
+            try {
+                mediaRecorder = new MediaRecorder(stream, options);
+            } catch (_e) {
+                // Fallback: no options at all
+                mediaRecorder = new MediaRecorder(stream);
+            }
+
             mediaRecorderRef.current = mediaRecorder;
             chunksRef.current = [];
 
             mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) chunksRef.current.push(e.data);
+                if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
+            };
+
+            mediaRecorder.onerror = () => {
+                setRecordError("Terjadi error saat merekam. Coba lagi.");
+                setIsRecording(false);
+                stream.getTracks().forEach((track) => track.stop());
             };
 
             mediaRecorder.onstop = () => {
-                // Use the actual mimeType the recorder used
+                if (chunksRef.current.length === 0) {
+                    setRecordError("Rekaman kosong. Pastikan mikrofon berfungsi.");
+                    stream.getTracks().forEach((track) => track.stop());
+                    return;
+                }
                 const actualType = mediaRecorder.mimeType || mimeType || "audio/webm";
                 const blob = new Blob(chunksRef.current, { type: actualType });
+                if (blob.size === 0) {
+                    setRecordError("Rekaman kosong. Pastikan mikrofon berfungsi.");
+                    stream.getTracks().forEach((track) => track.stop());
+                    return;
+                }
                 setRecordedBlob(blob);
                 setRecordedUrl(URL.createObjectURL(blob));
                 stream.getTracks().forEach((track) => track.stop());
             };
 
-            // Don't pass timeslice — Safari doesn't support it well
             mediaRecorder.start();
             setIsRecording(true);
             setRecordingTime(0);
@@ -175,16 +214,22 @@ export function MoodSupport() {
             timerRef.current = setInterval(() => {
                 setRecordingTime((prev) => prev + 1);
             }, 1000);
-        } catch (err) {
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : String(err);
+            if (msg.includes("Permission") || msg.includes("NotAllowed")) {
+                setRecordError("Izin mikrofon ditolak. Buka Settings > Privacy > Microphone dan izinkan browser.");
+            } else if (msg.includes("NotFound") || msg.includes("Requested device not found")) {
+                setRecordError("Mikrofon tidak ditemukan. Pastikan ada mikrofon yang terhubung.");
+            } else {
+                setRecordError("Gagal akses mikrofon: " + msg);
+            }
             console.error("Mic error:", err);
-            alert("Tidak bisa akses mikrofon. Pastikan izin mikrofon sudah diberikan.");
         }
     };
 
     const stopRecording = () => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-            // Request final data chunk before stopping
-            try { mediaRecorderRef.current.requestData(); } catch { /* ignore */ }
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+            try { mediaRecorderRef.current.requestData(); } catch (_e) { /* ok */ }
             mediaRecorderRef.current.stop();
         }
         if (timerRef.current) {
@@ -196,9 +241,15 @@ export function MoodSupport() {
 
     const cancelRecording = () => {
         stopRecording();
+        // Also stop stream tracks if still active
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach((track) => track.stop());
+            streamRef.current = null;
+        }
         setRecordedBlob(null);
         setRecordedUrl(null);
         setNoteTitle("");
+        setRecordError(null);
         setShowRecordModal(false);
     };
 
@@ -252,9 +303,10 @@ export function MoodSupport() {
             setRecordedUrl(null);
             setNoteTitle("");
             setShowRecordModal(false);
-        } catch (err) {
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : JSON.stringify(err);
             console.error("Save error:", err);
-            alert("Gagal menyimpan rekaman. Coba lagi.");
+            setRecordError("Gagal menyimpan: " + msg);
         } finally {
             setIsUploading(false);
         }
@@ -548,6 +600,19 @@ export function MoodSupport() {
                             <p className="text-[10px] uppercase tracking-[0.3em] mb-8" style={{ color: "var(--text-muted)" }}>
                                 Record a message for Ratih
                             </p>
+
+                            {/* Error display */}
+                            {recordError && (
+                                <div className="mb-6 p-4 rounded-xl text-left text-xs leading-relaxed" style={{ backgroundColor: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#f87171" }}>
+                                    {recordError}
+                                    <button
+                                        onClick={() => setRecordError(null)}
+                                        className="block mt-2 underline text-[10px] uppercase tracking-widest opacity-70"
+                                    >
+                                        Dismiss
+                                    </button>
+                                </div>
+                            )}
 
                             {/* State: Not yet recorded */}
                             {!recordedBlob && !isRecording && (
