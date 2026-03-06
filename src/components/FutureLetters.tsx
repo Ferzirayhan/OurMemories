@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, MailOpen, Clock, Plus, X, Send, Trash2 } from "lucide-react";
+import { Lock, MailOpen, Clock, Plus, X, Send, Trash2, Unlock, Gift } from "lucide-react";
 import { FutureLetter } from "@/lib/mock-data";
 import { supabase } from "@/lib/supabase";
 import { useAdmin } from "@/lib/admin-context";
@@ -14,9 +14,14 @@ export function FutureLetters() {
     const [isWriting, setIsWriting] = useState(false);
     const [newLetter, setNewLetter] = useState({ title: "", content: "", unlockDate: "" });
     const [loading, setLoading] = useState(true);
+    const [now, setNow] = useState(new Date());
+    const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     useEffect(() => {
         fetchLetters();
+        // Live countdown tick every minute
+        tickRef.current = setInterval(() => setNow(new Date()), 60000);
+        return () => { if (tickRef.current) clearInterval(tickRef.current); };
     }, []);
 
     const fetchLetters = async () => {
@@ -31,15 +36,35 @@ export function FutureLetters() {
     };
 
     const isLocked = (dateStr: string) => {
-        return new Date(dateStr) > new Date();
+        return new Date(dateStr) > now;
     };
 
     const getCountdown = (dateStr: string) => {
-        const diff = new Date(dateStr).getTime() - new Date().getTime();
-        if (diff <= 0) return "Unlocked";
+        const diff = new Date(dateStr).getTime() - now.getTime();
+        if (diff <= 0) return "Ready to open ✨";
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        return `${days}d ${hours}h left`;
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        if (days > 0) return `${days}d ${hours}h left`;
+        if (hours > 0) return `${hours}h ${mins}m left`;
+        return `${mins}m left`;
+    };
+
+    const handleOpenLetter = async (letter: FutureLetter) => {
+        if (isLocked(letter.unlockDate)) return;
+
+        // Mark as opened in DB if not already
+        if (!letter.isOpened) {
+            await supabase
+                .from('future_letters')
+                .update({ is_opened: true })
+                .eq('id', letter.id);
+
+            setLetters(prev => prev.map(l => l.id === letter.id ? { ...l, isOpened: true } : l));
+            setSelectedLetter({ ...letter, isOpened: true });
+        } else {
+            setSelectedLetter(letter);
+        }
     };
 
     const handleWriteLetter = async (e: React.FormEvent) => {
@@ -58,7 +83,7 @@ export function FutureLetters() {
             .select();
 
         if (data) {
-            setLetters([...letters, data[0]].sort((a, b) => new Date(a.unlockDate).getTime() - new Date(b.unlockDate).getTime()));
+            setLetters(prev => [...prev, data[0]].sort((a, b) => new Date(a.unlockDate).getTime() - new Date(b.unlockDate).getTime()));
             setNewLetter({ title: "", content: "", unlockDate: "" });
             setIsWriting(false);
         }
@@ -82,6 +107,10 @@ export function FutureLetters() {
         }
     };
 
+    // Separate letters by status
+    const unlockedLetters = letters.filter(l => !isLocked(l.unlockDate));
+    const lockedLetters = letters.filter(l => isLocked(l.unlockDate));
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between mb-6 sm:mb-8 flex-wrap gap-3">
@@ -89,58 +118,141 @@ export function FutureLetters() {
                     <Clock className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: 'var(--accent)' }} />
                     <h2 className="text-xl sm:text-2xl font-light font-serif italic" style={{ color: 'var(--text-secondary)' }}>Future Letters</h2>
                 </div>
-                <button
-                    onClick={() => setIsWriting(true)}
-                    className="glass px-4 py-2 rounded-full text-xs flex items-center gap-2 transition-all"
-                    style={{ color: 'var(--text-muted)' }}
-                >
-                    <Plus className="w-3 h-3" />
-                    Write Letter
-                </button>
+                {/* Only admin can write */}
+                {isAdmin && (
+                    <button
+                        onClick={() => setIsWriting(true)}
+                        className="glass px-4 py-2 rounded-full text-xs flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+                        style={{ color: 'var(--text-muted)' }}
+                    >
+                        <Plus className="w-3 h-3" />
+                        Write Letter
+                    </button>
+                )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {letters.map((letter) => {
-                    const locked = isLocked(letter.unlockDate);
-                    return (
-                        <motion.div
-                            key={letter.id}
-                            whileHover={locked ? {} : { y: -5 }}
-                            onClick={() => !locked && setSelectedLetter(letter)}
-                            className={`p-6 rounded-3xl border transition-all cursor-pointer relative overflow-hidden`}
-                            style={{
-                                backgroundColor: locked ? 'var(--input-bg)' : 'var(--glass-bg)',
-                                borderColor: locked ? 'var(--border)' : 'var(--border-hover)',
-                                opacity: locked ? 0.5 : 1,
-                                filter: locked ? 'grayscale(1)' : 'none'
-                            }}
-                        >
-                            <div className="flex justify-between items-start mb-4">
-                                {locked ? <Lock className="w-5 h-5" style={{ color: 'var(--text-faint)' }} /> : <MailOpen className="w-5 h-5" style={{ color: 'var(--accent)' }} />}
-                                <div className="flex items-center gap-3">
-                                    <span className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-                                        {getCountdown(letter.unlockDate)}
-                                    </span>
-                                    {isAdmin && (
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleDeleteLetter(letter.id); }}
-                                            className="hover:text-red-400 transition-colors"
-                                            style={{ color: 'var(--text-faint)' }}
-                                        >
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
+            {loading ? (
+                <div className="text-center py-12">
+                    <Clock className="w-5 h-5 animate-spin mx-auto mb-2" style={{ color: 'var(--text-faint)' }} />
+                    <p className="text-xs font-serif italic" style={{ color: 'var(--text-faint)' }}>Loading letters...</p>
+                </div>
+            ) : letters.length === 0 ? (
+                <div className="text-center py-12 rounded-2xl" style={{ border: '1px dashed var(--border)' }}>
+                    <Gift className="w-6 h-6 mx-auto mb-3" style={{ color: 'var(--text-faint)' }} />
+                    <p className="text-sm font-serif italic" style={{ color: 'var(--text-faint)' }}>
+                        {isAdmin ? "Belum ada surat. Tulis yang pertama!" : "No letters yet. Something special is coming..."}
+                    </p>
+                </div>
+            ) : (
+                <div className="space-y-6">
+                    {/* Unlocked / Ready to open */}
+                    {unlockedLetters.length > 0 && (
+                        <div className="space-y-3">
+                            {unlockedLetters.map((letter) => (
+                                <motion.div
+                                    key={letter.id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    whileHover={{ y: -3 }}
+                                    onClick={() => handleOpenLetter(letter)}
+                                    className="p-5 sm:p-6 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group"
+                                    style={{
+                                        backgroundColor: 'var(--glass-bg)',
+                                        borderColor: letter.isOpened ? 'var(--border)' : 'var(--accent)',
+                                    }}
+                                >
+                                    {/* Glow for unopened */}
+                                    {!letter.isOpened && (
+                                        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(135deg, var(--accent-soft), transparent 60%)' }} />
                                     )}
+                                    <div className="relative z-10 flex items-start gap-4">
+                                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: letter.isOpened ? 'var(--input-bg)' : 'var(--accent-soft)' }}>
+                                            {letter.isOpened
+                                                ? <MailOpen className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+                                                : <Gift className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+                                            }
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-base font-medium truncate" style={{ color: 'var(--text-primary)' }}>{letter.title}</h3>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                {letter.author && <span className="text-[10px] font-serif italic" style={{ color: 'var(--text-faint)' }}>from {letter.author}</span>}
+                                                <span className="text-[10px] uppercase tracking-widest" style={{ color: letter.isOpened ? 'var(--text-faint)' : 'var(--accent)' }}>
+                                                    {letter.isOpened ? "Opened" : "✨ Tap to open!"}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {isAdmin && (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleDeleteLetter(letter.id); }}
+                                                className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-400 p-1"
+                                                style={{ color: 'var(--text-faint)' }}
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Locked / Coming soon */}
+                    {lockedLetters.length > 0 && (
+                        <div className="space-y-3">
+                            {unlockedLetters.length > 0 && (
+                                <div className="flex items-center gap-3 my-4">
+                                    <div className="flex-1 h-[1px]" style={{ backgroundColor: 'var(--border)' }} />
+                                    <span className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--text-faint)' }}>Coming Soon</span>
+                                    <div className="flex-1 h-[1px]" style={{ backgroundColor: 'var(--border)' }} />
                                 </div>
-                            </div>
-                            <h3 className="text-lg font-medium mb-1 truncate" style={{ color: 'var(--text-primary)' }}>{letter.title}</h3>
-                            {letter.author && <p className="text-[10px] font-serif italic mb-2" style={{ color: 'var(--text-faint)' }}>— {letter.author}</p>}
-                            <p className="text-sm font-serif italic" style={{ color: 'var(--text-muted)' }}>
-                                {locked ? "Unlock: " + new Date(letter.unlockDate).toLocaleDateString() : "Tap to read..."}
-                            </p>
-                        </motion.div>
-                    );
-                })}
-            </div>
+                            )}
+                            {lockedLetters.map((letter) => (
+                                <motion.div
+                                    key={letter.id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="p-5 sm:p-6 rounded-2xl border transition-all relative overflow-hidden group"
+                                    style={{
+                                        backgroundColor: 'var(--input-bg)',
+                                        borderColor: 'var(--border)',
+                                        opacity: 0.6,
+                                    }}
+                                >
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--input-bg)', border: '1px solid var(--border)' }}>
+                                            <Lock className="w-4 h-4" style={{ color: 'var(--text-faint)' }} />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            {/* Admin can see title, Ratih sees hidden */}
+                                            <h3 className="text-base font-medium truncate" style={{ color: 'var(--text-muted)' }}>
+                                                {isAdmin ? letter.title : "A surprise awaits..."}
+                                            </h3>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <Lock className="w-2.5 h-2.5" style={{ color: 'var(--text-faint)' }} />
+                                                <span className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--text-faint)' }}>
+                                                    {getCountdown(letter.unlockDate)}
+                                                </span>
+                                            </div>
+                                            <p className="text-[10px] mt-1" style={{ color: 'var(--text-faint)' }}>
+                                                Opens {new Date(letter.unlockDate).toLocaleDateString("en-US", { month: 'long', day: 'numeric', year: 'numeric' })}
+                                            </p>
+                                        </div>
+                                        {isAdmin && (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleDeleteLetter(letter.id); }}
+                                                className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-400 p-1"
+                                                style={{ color: 'var(--text-faint)' }}
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Read Letter Modal */}
             <AnimatePresence>
