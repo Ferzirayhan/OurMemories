@@ -26,8 +26,36 @@
   }
 }
 
-/* ===== DARK THEME (default) ===== */
-:root, .dark {
+/* ===== LIGHT THEME (default) ===== */
+:root, .light {
+  --background: #faf8f5;
+  --foreground: #1a1816;
+  --card: #ffffff;
+  --card-foreground: #1a1816;
+  --border: rgba(0,0,0,0.08);
+  --border-hover: rgba(0,0,0,0.15);
+  --glass-bg: rgba(255,255,255,0.7);
+  --glass-border: rgba(0,0,0,0.08);
+  --input-bg: rgba(0,0,0,0.03);
+  --accent: #a06b3e;
+  --accent-soft: rgba(160,107,62,0.10);
+  --text-primary: #1a1816;
+  --text-secondary: #57534e;
+  --text-muted: #78716c;
+  --text-faint: #a8a29e;
+  --nav-bg: rgba(255,255,255,0.85);
+  --modal-overlay: rgba(0,0,0,0.5);
+  --shadow-color: rgba(0,0,0,0.08);
+  --scrollbar-thumb: #d6d3d1;
+  --scrollbar-hover: #a8a29e;
+  --jar-bg: rgba(200,220,240,0.12);
+  --jar-border: rgba(100,140,180,0.3);
+  --jar-neck: rgba(200,220,240,0.15);
+  --jar-reflection: rgba(255,255,255,0.6);
+}
+
+/* ===== DARK THEME ===== */
+.dark {
   --background: #121110;
   --foreground: #f5f2ed;
   --card: #1a1918;
@@ -52,34 +80,6 @@
   --jar-border: rgba(255,255,255,0.2);
   --jar-neck: rgba(255,255,255,0.05);
   --jar-reflection: rgba(255,255,255,0.1);
-}
-
-/* ===== LIGHT THEME ===== */
-.light {
-  --background: #faf8f5;
-  --foreground: #1a1816;
-  --card: #ffffff;
-  --card-foreground: #1a1816;
-  --border: rgba(0,0,0,0.08);
-  --border-hover: rgba(0,0,0,0.15);
-  --glass-bg: rgba(255,255,255,0.7);
-  --glass-border: rgba(0,0,0,0.08);
-  --input-bg: rgba(0,0,0,0.03);
-  --accent: #c4875a;
-  --accent-soft: rgba(196,135,90,0.12);
-  --text-primary: #1a1816;
-  --text-secondary: #57534e;
-  --text-muted: #78716c;
-  --text-faint: #a8a29e;
-  --nav-bg: rgba(255,255,255,0.75);
-  --modal-overlay: rgba(0,0,0,0.5);
-  --shadow-color: rgba(0,0,0,0.08);
-  --scrollbar-thumb: #d6d3d1;
-  --scrollbar-hover: #a8a29e;
-  --jar-bg: rgba(200,220,240,0.12);
-  --jar-border: rgba(100,140,180,0.3);
-  --jar-neck: rgba(200,220,240,0.15);
-  --jar-reflection: rgba(255,255,255,0.6);
 }
 
 body {
