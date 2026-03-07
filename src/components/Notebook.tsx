@@ -164,7 +164,8 @@ export function Notebook() {
                 </div>
             </div>
 
-            {/* Past Entries */}
+            {/* Past Entries — max 4 visible, scroll for more */}
+            <div className="max-h-[480px] overflow-y-auto pr-1 scrollbar-thin" style={{ scrollbarWidth: "thin", scrollbarColor: "var(--border) transparent" }}>
             <div className="space-y-6">
                 {isLoading ? (
                     <div className="text-center py-12">
@@ -209,6 +210,7 @@ export function Notebook() {
                         <p className="font-light text-sm" style={{ color: 'var(--text-faint)' }}>No notes for today yet.</p>
                     </div>
                 )}
+            </div>
             </div>
         </div>
     );

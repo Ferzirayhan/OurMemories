@@ -17,8 +17,11 @@ const AudioContext = createContext<AudioContextType | undefined>(undefined);
 
 export function AudioProvider({ children }: { children: ReactNode }) {
     const [isPlaying, setIsPlaying] = useState(false);
-    const [currentSongIndex, setCurrentSongIndex] = useState(0);
+    const [currentSongIndex, setCurrentSongIndex] = useState(() =>
+        Math.floor(Math.random() * MOCK_PLAYLIST.length)
+    );
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const hasAutoPlayed = useRef(false);
 
     const currentSong = MOCK_PLAYLIST[currentSongIndex];
 
@@ -38,6 +41,37 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         return () => {
             audio.removeEventListener("ended", handleEnded);
         };
+    }, []);
+
+    // Auto-play on first user interaction (browsers block autoplay without gesture)
+    useEffect(() => {
+        const startMusic = () => {
+            if (hasAutoPlayed.current) return;
+            hasAutoPlayed.current = true;
+
+            const audio = audioRef.current;
+            if (!audio) return;
+
+            const song = MOCK_PLAYLIST[currentSongIndex];
+            if (song.audioUrl) {
+                audio.src = song.audioUrl;
+                audio.play()
+                    .then(() => setIsPlaying(true))
+                    .catch(() => {});
+            }
+
+            document.removeEventListener("click", startMusic);
+            document.removeEventListener("touchstart", startMusic);
+        };
+
+        document.addEventListener("click", startMusic, { once: false });
+        document.addEventListener("touchstart", startMusic, { once: false });
+
+        return () => {
+            document.removeEventListener("click", startMusic);
+            document.removeEventListener("touchstart", startMusic);
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Update source when song changes
